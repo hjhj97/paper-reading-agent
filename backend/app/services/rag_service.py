@@ -112,10 +112,41 @@ class RAGService:
         Returns:
             Tuple of (combined context, list of source chunks)
         """
+        # Check if question is about metadata (title, author, abstract)
+        metadata_keywords = ['title', 'author', 'abstract', 'introduction', 'name']
+        question_lower = question.lower()
+        is_metadata_question = any(keyword in question_lower for keyword in metadata_keywords)
+        
+        context_chunks = []
+        sources = []
+        chunk_indices_seen = set()
+        
+        # If asking about metadata, include first few chunks
+        if is_metadata_question:
+            # Fetch first 3 chunks by chunk_index
+            for chunk_idx in range(3):
+                results = self.index.query(
+                    vector=[0.0] * 1536,  # Dummy vector
+                    top_k=10,
+                    filter={
+                        "session_id": session_id,
+                        "chunk_index": chunk_idx
+                    },
+                    include_metadata=True
+                )
+                
+                if results.matches:
+                    match = results.matches[0]
+                    if match.metadata and "text" in match.metadata:
+                        chunk_text = match.metadata["text"]
+                        context_chunks.append(chunk_text)
+                        sources.append(f"Chunk {chunk_idx}")
+                        chunk_indices_seen.add(chunk_idx)
+        
         # Generate embedding for the question
         question_embedding = await self.embeddings.aembed_query(question)
         
-        # Query Pinecone with session filter
+        # Query Pinecone with semantic search
         results = self.index.query(
             vector=question_embedding,
             top_k=top_k,
@@ -123,15 +154,15 @@ class RAGService:
             include_metadata=True
         )
         
-        # Extract text chunks from results
-        sources = []
-        context_chunks = []
-        
+        # Add semantic search results (avoid duplicates)
         for match in results.matches:
             if match.metadata and "text" in match.metadata:
-                chunk_text = match.metadata["text"]
-                context_chunks.append(chunk_text)
-                sources.append(f"Chunk {match.metadata.get('chunk_index', 'unknown')}")
+                chunk_idx = match.metadata.get('chunk_index', -1)
+                if chunk_idx not in chunk_indices_seen:
+                    chunk_text = match.metadata["text"]
+                    context_chunks.append(chunk_text)
+                    sources.append(f"Chunk {chunk_idx}")
+                    chunk_indices_seen.add(chunk_idx)
         
         # Combine chunks into context
         context = "\n\n".join(context_chunks)

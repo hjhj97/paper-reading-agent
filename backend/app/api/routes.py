@@ -159,6 +159,11 @@ async def ask_question_stream(request: AskRequest):
             top_k=3
         )
         
+        print(f"\n[DEBUG] Question: {request.question}")
+        print(f"[DEBUG] Context retrieved ({len(context)} chars):")
+        print(f"[DEBUG] Context preview: {context[:500]}...")
+        print(f"[DEBUG] Sources: {sources}\n")
+        
         if not context:
             raise HTTPException(
                 status_code=404,
