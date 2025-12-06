@@ -61,7 +61,6 @@ export default function ChatInterface({
         selectedModel,
         // onChunk: append content
         (content: string) => {
-          console.log("[ChatInterface] onChunk called with:", content);
           setMessages((prev) => {
             const newMessages = [...prev];
             const lastIdx = newMessages.length - 1;
@@ -76,10 +75,6 @@ export default function ChatInterface({
                 content: newMessages[lastIdx].content + content,
                 isStreaming: true,
               };
-              console.log(
-                "[ChatInterface] Updated message:",
-                newMessages[lastIdx].content
-              );
             }
             return newMessages;
           });
