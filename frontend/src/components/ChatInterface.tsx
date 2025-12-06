@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { api } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   sources?: string[]
+  isStreaming?: boolean
 }
 
 interface ChatInterfaceProps {
@@ -19,6 +20,12 @@ export default function ChatInterface({ sessionId, selectedModel }: ChatInterfac
   const [question, setQuestion] = useState<string>('')
   const [isAsking, setIsAsking] = useState(false)
   const [error, setError] = useState<string>('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const handleAsk = async () => {
     if (!question.trim()) return
@@ -29,25 +36,70 @@ export default function ChatInterface({ sessionId, selectedModel }: ChatInterfac
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentQuestion = question
     setQuestion('')
     setIsAsking(true)
     setError('')
 
+    // Add placeholder for assistant message
+    const assistantMessageIndex = messages.length + 1
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: '',
+      sources: [],
+      isStreaming: true
+    }])
+
     try {
-      const response = await api.ask(sessionId, question, selectedModel)
-      
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: response.answer,
-        sources: response.sources
-      }
-      
-      setMessages(prev => [...prev, assistantMessage])
+      await api.askStream(
+        sessionId,
+        currentQuestion,
+        selectedModel,
+        // onChunk: append content
+        (content: string) => {
+          setMessages(prev => {
+            const newMessages = [...prev]
+            const lastMessage = newMessages[assistantMessageIndex]
+            if (lastMessage && lastMessage.role === 'assistant') {
+              lastMessage.content += content
+              lastMessage.isStreaming = true
+            }
+            return newMessages
+          })
+        },
+        // onSources: set sources
+        (sources: string[]) => {
+          setMessages(prev => {
+            const newMessages = [...prev]
+            const lastMessage = newMessages[assistantMessageIndex]
+            if (lastMessage && lastMessage.role === 'assistant') {
+              lastMessage.sources = sources
+            }
+            return newMessages
+          })
+        },
+        // onComplete: mark streaming as done
+        () => {
+          setMessages(prev => {
+            const newMessages = [...prev]
+            const lastMessage = newMessages[assistantMessageIndex]
+            if (lastMessage && lastMessage.role === 'assistant') {
+              lastMessage.isStreaming = false
+            }
+            return newMessages
+          })
+          setIsAsking(false)
+        },
+        // onError: show error and remove assistant message
+        (errorMsg: string) => {
+          setError(errorMsg)
+          setMessages(prev => prev.slice(0, -1))
+          setIsAsking(false)
+        }
+      )
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to get answer')
-      // Remove user message if request failed
+      setError(err.message || 'Failed to get answer')
       setMessages(prev => prev.slice(0, -1))
-    } finally {
       setIsAsking(false)
     }
   }
@@ -81,41 +133,53 @@ export default function ChatInterface({ sessionId, selectedModel }: ChatInterfac
             Ask any question about the paper...
           </p>
         ) : (
-          messages.map((message, index) => (
-            <div
-              key={index}
-              style={{
-                marginBottom: '1rem',
-                padding: '1rem',
-                borderRadius: '4px',
-                background: message.role === 'user' ? '#dbeafe' : '#ffffff',
-                border: message.role === 'assistant' ? '1px solid #e5e7eb' : 'none'
-              }}
-            >
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                {message.role === 'user' ? '👤 You' : '🤖 Assistant'}
-              </div>
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                {message.content}
-              </div>
-              {message.sources && message.sources.length > 0 && (
-                <div style={{ 
-                  marginTop: '0.5rem', 
-                  fontSize: '0.85rem', 
-                  color: '#6b7280',
-                  fontStyle: 'italic'
-                }}>
-                  Sources: {message.sources.join(', ')}
+          <>
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  borderRadius: '4px',
+                  background: message.role === 'user' ? '#dbeafe' : '#ffffff',
+                  border: message.role === 'assistant' ? '1px solid #e5e7eb' : 'none'
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                  {message.role === 'user' ? '👤 You' : '🤖 Assistant'}
+                  {message.isStreaming && (
+                    <span style={{ marginLeft: '0.5rem', color: '#10b981', fontSize: '0.9rem' }}>
+                      ●
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
-        )}
-        
-        {isAsking && (
-          <div style={{ padding: '1rem', color: '#6b7280', textAlign: 'center' }}>
-            Thinking...
-          </div>
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                  {message.content}
+                  {message.isStreaming && (
+                    <span style={{ 
+                      display: 'inline-block',
+                      width: '8px',
+                      height: '16px',
+                      background: '#2563eb',
+                      marginLeft: '2px',
+                      animation: 'blink 1s infinite'
+                    }} />
+                  )}
+                </div>
+                {message.sources && message.sources.length > 0 && (
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    fontSize: '0.85rem', 
+                    color: '#6b7280',
+                    fontStyle: 'italic'
+                  }}>
+                    Sources: {message.sources.join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </>
         )}
       </div>
       
@@ -137,7 +201,13 @@ export default function ChatInterface({ sessionId, selectedModel }: ChatInterfac
           {isAsking ? 'Asking...' : 'Ask'}
         </button>
       </div>
+
+      <style jsx>{`
+        @keyframes blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
+        }
+      `}</style>
     </div>
   )
 }
-
