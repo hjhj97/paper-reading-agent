@@ -22,8 +22,7 @@ export default function ModelSelector({ selectedModel, onModelChange }: ModelSel
         // Set default models as fallback
         setModels([
           { id: 'gpt-4o-mini', name: 'GPT-4o Mini', is_default: true },
-          { id: 'gpt-4o', name: 'GPT-4o', is_default: false },
-          { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', is_default: false },
+          { id: 'gpt-5-mini', name: 'GPT-5 Mini', is_default: false },
         ])
       } finally {
         setIsLoading(false)
