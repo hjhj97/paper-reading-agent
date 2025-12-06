@@ -1,15 +1,11 @@
 "use client";
 
-import { useState } from "react";
-
 interface PdfViewerProps {
   pdfUrl: string;
   filename: string;
 }
 
 export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
   return (
     <div className="card">
       <h2>📄 {filename}</h2>
@@ -17,7 +13,6 @@ export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
       {/* PDF Viewer using iframe */}
       <div
         style={{
-          position: "relative",
           width: "100%",
           height: "700px",
           background: "#e5e7eb",
@@ -25,21 +20,6 @@ export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
           overflow: "hidden",
         }}
       >
-        {isLoading && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 1,
-            }}
-          >
-            <p>Loading PDF...</p>
-          </div>
-        )}
-
         <iframe
           src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
           style={{
@@ -48,7 +28,6 @@ export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
             border: "none",
           }}
           title={filename}
-          onLoad={() => setIsLoading(false)}
         />
       </div>
 
@@ -60,8 +39,7 @@ export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
           textAlign: "center",
         }}
       >
-        PDF viewer powered by your browser. If the PDF doesn&apos;t display, try
-        the &quot;Open in New Tab&quot; button.
+        PDF viewer powered by your browser.
       </p>
     </div>
   );

@@ -278,8 +278,18 @@ async def get_session_pdf(session_id: str):
     session = session_manager.get_session(session_id)
     filename = session.filename if session else "paper.pdf"
     
-    return FileResponse(
-        path=pdf_path,
+    from starlette.responses import Response
+    import os
+    
+    # Read the PDF file
+    with open(pdf_path, "rb") as f:
+        pdf_content = f.read()
+    
+    # Return PDF with inline disposition
+    return Response(
+        content=pdf_content,
         media_type="application/pdf",
-        filename=filename
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"'
+        }
     )
