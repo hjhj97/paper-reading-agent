@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
 from app.models.schemas import (
     UploadResponse,
     SummarizeRequest,
@@ -7,7 +8,8 @@ from app.models.schemas import (
     AskResponse,
     RateRequest,
     RateResponse,
-    ModelInfo
+    ModelInfo,
+    SessionDetailResponse
 )
 from app.services.pdf_parser import PDFParser
 from app.services.session_manager import session_manager
@@ -38,8 +40,12 @@ async def upload_pdf(file: UploadFile = File(...)):
         # Clean the text
         cleaned_text = pdf_parser.clean_text(text)
         
-        # Create session
-        session_id = session_manager.create_session(file.filename, cleaned_text)
+        # Create session with PDF content
+        session_id = session_manager.create_session(
+            filename=file.filename,
+            text=cleaned_text,
+            pdf_content=content  # Save PDF file
+        )
         
         # Index document for RAG
         num_chunks = await rag_service.index_document(session_id, cleaned_text)
@@ -135,6 +141,65 @@ async def ask_question(request: AskRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/ask/stream")
+async def ask_question_stream(request: AskRequest):
+    """
+    Ask a question about the paper using RAG with streaming response
+    """
+    # Check if session exists
+    session = session_manager.get_session(request.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    try:
+        # Query relevant context using RAG
+        context, sources = await rag_service.query_document(
+            session_id=request.session_id,
+            question=request.question,
+            top_k=3
+        )
+        
+        if not context:
+            raise HTTPException(
+                status_code=404,
+                detail="No relevant context found for the question"
+            )
+        
+        # Stream answer using LLM
+        def generate():
+            try:
+                # Send sources first
+                import json
+                yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
+                
+                # Then stream the answer
+                for chunk in llm_service.answer_question_stream(
+                    question=request.question,
+                    context=context,
+                    model=request.model
+                ):
+                    yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
+                
+                # Send done signal
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+        
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/rate", response_model=RateResponse)
 async def rate_summary(request: RateRequest):
     """
@@ -178,3 +243,43 @@ async def get_models():
     models = llm_service.get_available_models()
     return [ModelInfo(**model) for model in models]
 
+
+@router.get("/session/{session_id}", response_model=SessionDetailResponse)
+async def get_session_detail(session_id: str):
+    """
+    Get session detail including PDF text content
+    """
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    has_pdf = session.pdf_path is not None and session_manager.get_pdf_path(session_id) is not None
+    
+    return SessionDetailResponse(
+        session_id=session.session_id,
+        filename=session.filename,
+        text=session.text,
+        has_pdf=has_pdf,
+        summary=session.summary,
+        rating=session.rating,
+        created_at=session.created_at.isoformat()
+    )
+
+
+@router.get("/session/{session_id}/pdf")
+async def get_session_pdf(session_id: str):
+    """
+    Get PDF file for a session
+    """
+    pdf_path = session_manager.get_pdf_path(session_id)
+    if not pdf_path:
+        raise HTTPException(status_code=404, detail="PDF not found")
+    
+    session = session_manager.get_session(session_id)
+    filename = session.filename if session else "paper.pdf"
+    
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=filename
+    )

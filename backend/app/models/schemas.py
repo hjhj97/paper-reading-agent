@@ -56,7 +56,18 @@ class SessionData(BaseModel):
     session_id: str
     filename: str
     text: str
+    pdf_path: Optional[str] = None
     summary: Optional[str] = None
     rating: Optional[str] = None
     created_at: datetime
+
+
+class SessionDetailResponse(BaseModel):
+    session_id: str
+    filename: str
+    text: str
+    has_pdf: bool = False
+    summary: Optional[str] = None
+    rating: Optional[str] = None
+    created_at: str
 
