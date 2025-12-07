@@ -244,6 +244,26 @@ async def get_models():
     return [ModelInfo(**model) for model in models]
 
 
+@router.get("/sessions")
+async def get_all_sessions():
+    """
+    Get all paper sessions (history)
+    """
+    sessions = session_manager.get_all_sessions()
+    
+    return [
+        {
+            "session_id": session.session_id,
+            "filename": session.filename,
+            "has_pdf": session.pdf_path is not None,
+            "has_summary": session.summary is not None,
+            "created_at": session.created_at.isoformat(),
+            "text_length": len(session.text)
+        }
+        for session in sessions
+    ]
+
+
 @router.get("/session/{session_id}", response_model=SessionDetailResponse)
 async def get_session_detail(session_id: str):
     """

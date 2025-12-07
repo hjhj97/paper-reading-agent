@@ -76,6 +76,17 @@ class SessionManager:
         """
         return self._sessions.get(session_id)
     
+    def get_all_sessions(self) -> list[SessionData]:
+        """
+        Get all sessions sorted by creation date (newest first)
+        
+        Returns:
+            List of all SessionData objects
+        """
+        sessions = list(self._sessions.values())
+        sessions.sort(key=lambda x: x.created_at, reverse=True)
+        return sessions
+    
     def get_pdf_path(self, session_id: str) -> Optional[str]:
         """
         Get PDF file path for a session

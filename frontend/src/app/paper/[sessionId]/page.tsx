@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
+  History,
 } from "lucide-react";
 
 export default function PaperPage() {
@@ -106,11 +107,25 @@ export default function PaperPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            📄 Paper Reading Agent
-          </h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Button onClick={() => router.push("/")} variant="outline" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Home
+            </Button>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+              📄 Paper Reading Agent
+            </h1>
+            <Button
+              onClick={() => router.push("/history")}
+              variant="outline"
+              size="sm"
+            >
+              <History className="mr-2 h-4 w-4" />
+              History
+            </Button>
+          </div>
+          <p className="text-center text-muted-foreground">
             AI-powered paper summarization and Q&A system
           </p>
         </div>
@@ -136,14 +151,6 @@ export default function PaperPage() {
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={() => router.push("/")}
-                variant="outline"
-                size="sm"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Upload New Paper
-              </Button>
             </div>
           </CardHeader>
         </Card>

@@ -12,7 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, Sparkles, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Sparkles, MessageCircle, History } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -33,12 +34,27 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12 space-y-4">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            📄 Paper Reading Agent
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            AI-powered paper summarization and Q&A system
-          </p>
+          <div className="flex justify-between items-start">
+            <div className="flex-1"></div>
+            <div className="flex-1 text-center">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                📄 Paper Reading Agent
+              </h1>
+              <p className="text-xl text-muted-foreground mt-4">
+                AI-powered paper summarization and Q&A system
+              </p>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <Button
+                onClick={() => router.push("/history")}
+                variant="outline"
+                size="sm"
+              >
+                <History className="mr-2 h-4 w-4" />
+                History
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Settings */}
