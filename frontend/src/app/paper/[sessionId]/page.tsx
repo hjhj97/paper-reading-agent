@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api, SessionDetail, getPdfUrl } from "@/lib/api";
 import ModelSelector from "@/components/ModelSelector";
+import LanguageSelector from "@/components/LanguageSelector";
 import SummaryDisplay from "@/components/SummaryDisplay";
 import ChatInterface from "@/components/ChatInterface";
 import PdfViewer from "@/components/PdfViewer";
@@ -24,7 +25,16 @@ export default function PaperPage() {
   const sessionId = params.sessionId as string;
 
   const [session, setSession] = useState<SessionDetail | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
+  const [selectedModel, setSelectedModel] = useState<string>(
+    typeof window !== "undefined"
+      ? localStorage.getItem("preferredModel") || "gpt-4o-mini"
+      : "gpt-4o-mini"
+  );
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(
+    typeof window !== "undefined"
+      ? localStorage.getItem("preferredLanguage") || "en"
+      : "en"
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [hasSummary, setHasSummary] = useState<boolean>(false);
@@ -138,11 +148,17 @@ export default function PaperPage() {
           </CardHeader>
         </Card>
 
-        {/* Model Selector */}
-        <ModelSelector
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
-        />
+        {/* Settings */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ModelSelector
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+          />
+          <LanguageSelector
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
+          />
+        </div>
 
         {/* PDF Viewer or Raw Text */}
         {session.has_pdf ? (
@@ -208,6 +224,7 @@ export default function PaperPage() {
         <SummaryDisplay
           sessionId={sessionId}
           selectedModel={selectedModel}
+          selectedLanguage={selectedLanguage}
           onSummaryGenerated={handleSummaryGenerated}
           autoSummarize={true}
           initialSummary={session.summary}
@@ -215,7 +232,11 @@ export default function PaperPage() {
 
         {/* Chat Interface (only shown after summary is generated) */}
         {hasSummary && (
-          <ChatInterface sessionId={sessionId} selectedModel={selectedModel} />
+          <ChatInterface
+            sessionId={sessionId}
+            selectedModel={selectedModel}
+            selectedLanguage={selectedLanguage}
+          />
         )}
       </div>
     </div>

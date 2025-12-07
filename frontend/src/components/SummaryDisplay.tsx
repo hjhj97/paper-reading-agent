@@ -25,6 +25,7 @@ import {
 interface SummaryDisplayProps {
   sessionId: string;
   selectedModel: string;
+  selectedLanguage: string;
   onSummaryGenerated: () => void;
   autoSummarize?: boolean;
   initialSummary?: string | null;
@@ -33,6 +34,7 @@ interface SummaryDisplayProps {
 export default function SummaryDisplay({
   sessionId,
   selectedModel,
+  selectedLanguage,
   onSummaryGenerated,
   autoSummarize = false,
   initialSummary = null,
@@ -65,10 +67,19 @@ export default function SummaryDisplay({
     setSummary("");
     setRating("");
 
+    // Add language instruction to custom prompt
+    let finalPrompt = customPrompt;
+    if (selectedLanguage === "ko" && !customPrompt) {
+      finalPrompt =
+        "Please provide the summary in Korean (한국어로 요약해주세요).";
+    } else if (selectedLanguage === "ko" && customPrompt) {
+      finalPrompt = `${customPrompt}\n\nPlease respond in Korean (한국어로 응답해주세요).`;
+    }
+
     try {
       const response = await api.summarize(
         sessionId,
-        customPrompt || undefined,
+        finalPrompt || undefined,
         selectedModel
       );
       setSummary(response.summary);
@@ -112,9 +123,15 @@ export default function SummaryDisplay({
         {isGenerating && (
           <div className="text-center p-8 bg-primary/5 rounded-lg space-y-3">
             <Loader2 className="h-10 w-10 text-primary mx-auto animate-spin" />
-            <p className="font-semibold text-primary">Generating summary...</p>
+            <p className="font-semibold text-primary">
+              {selectedLanguage === "ko"
+                ? "요약 생성 중..."
+                : "Generating summary..."}
+            </p>
             <p className="text-sm text-muted-foreground">
-              This may take a moment depending on the paper length.
+              {selectedLanguage === "ko"
+                ? "논문 길이에 따라 시간이 걸릴 수 있습니다."
+                : "This may take a moment depending on the paper length."}
             </p>
           </div>
         )}
@@ -123,19 +140,25 @@ export default function SummaryDisplay({
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Custom Prompt (Optional)
+                {selectedLanguage === "ko"
+                  ? "커스텀 프롬프트 (선택사항)"
+                  : "Custom Prompt (Optional)"}
               </label>
               <Textarea
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Enter a custom prompt to guide the summarization (e.g., 'Focus on the methodology and results')..."
+                placeholder={
+                  selectedLanguage === "ko"
+                    ? "요약을 안내할 커스텀 프롬프트를 입력하세요 (예: '방법론과 결과에 집중해주세요')..."
+                    : "Enter a custom prompt to guide the summarization (e.g., 'Focus on the methodology and results')..."
+                }
                 rows={4}
               />
             </div>
 
             <Button onClick={handleGenerateSummary} className="w-full">
               <Sparkles className="mr-2 h-4 w-4" />
-              Generate Summary
+              {selectedLanguage === "ko" ? "요약 생성" : "Generate Summary"}
             </Button>
           </div>
         )}
@@ -149,7 +172,11 @@ export default function SummaryDisplay({
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-medium">Rate this summary:</span>
+              <span className="text-sm font-medium">
+                {selectedLanguage === "ko"
+                  ? "이 요약을 평가하세요:"
+                  : "Rate this summary:"}
+              </span>
               <Button
                 onClick={() => handleRate("thumbs_up")}
                 variant={rating === "thumbs_up" ? "default" : "outline"}
@@ -161,7 +188,7 @@ export default function SummaryDisplay({
                 }
               >
                 <ThumbsUp className="mr-1.5 h-3.5 w-3.5" />
-                Good
+                {selectedLanguage === "ko" ? "좋음" : "Good"}
               </Button>
               <Button
                 onClick={() => handleRate("thumbs_down")}
@@ -172,11 +199,13 @@ export default function SummaryDisplay({
                 }
               >
                 <ThumbsDown className="mr-1.5 h-3.5 w-3.5" />
-                Not Good
+                {selectedLanguage === "ko" ? "나쁨" : "Not Good"}
               </Button>
               {rating && (
                 <span className="text-sm text-muted-foreground">
-                  Thank you for your feedback!
+                  {selectedLanguage === "ko"
+                    ? "피드백 감사합니다!"
+                    : "Thank you for your feedback!"}
                 </span>
               )}
             </div>
@@ -189,7 +218,9 @@ export default function SummaryDisplay({
                 className="w-full justify-start"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Regenerate with custom prompt
+                {selectedLanguage === "ko"
+                  ? "커스텀 프롬프트로 재생성"
+                  : "Regenerate with custom prompt"}
               </Button>
 
               {showRegenerate && (
@@ -197,7 +228,11 @@ export default function SummaryDisplay({
                   <Textarea
                     value={customPrompt}
                     onChange={(e) => setCustomPrompt(e.target.value)}
-                    placeholder="Enter a custom prompt..."
+                    placeholder={
+                      selectedLanguage === "ko"
+                        ? "커스텀 프롬프트를 입력하세요..."
+                        : "Enter a custom prompt..."
+                    }
                     rows={3}
                   />
                   <Button
@@ -208,12 +243,14 @@ export default function SummaryDisplay({
                     {isGenerating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Regenerating...
+                        {selectedLanguage === "ko"
+                          ? "재생성 중..."
+                          : "Regenerating..."}
                       </>
                     ) : (
                       <>
                         <Sparkles className="mr-2 h-4 w-4" />
-                        Regenerate
+                        {selectedLanguage === "ko" ? "재생성" : "Regenerate"}
                       </>
                     )}
                   </Button>

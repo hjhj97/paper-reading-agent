@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PdfUploader from "@/components/PdfUploader";
+import ModelSelector from "@/components/ModelSelector";
+import LanguageSelector from "@/components/LanguageSelector";
 import {
   Card,
   CardContent,
@@ -13,8 +16,14 @@ import { FileText, Sparkles, MessageCircle } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
+  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
   const handleUploadSuccess = (newSessionId: string) => {
+    // Save preferences to localStorage
+    localStorage.setItem("preferredModel", selectedModel);
+    localStorage.setItem("preferredLanguage", selectedLanguage);
+
     // Navigate to paper detail page after upload
     router.push(`/paper/${newSessionId}`);
   };
@@ -30,6 +39,18 @@ export default function Home() {
           <p className="text-xl text-muted-foreground">
             AI-powered paper summarization and Q&A system
           </p>
+        </div>
+
+        {/* Settings */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <ModelSelector
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+          />
+          <LanguageSelector
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
+          />
         </div>
 
         {/* Uploader */}

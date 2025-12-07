@@ -32,11 +32,13 @@ interface Message {
 interface ChatInterfaceProps {
   sessionId: string;
   selectedModel: string;
+  selectedLanguage: string;
 }
 
 export default function ChatInterface({
   sessionId,
   selectedModel,
+  selectedLanguage,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState<string>("");
@@ -68,7 +70,13 @@ export default function ChatInterface({
       },
     ]);
 
-    const currentQuestion = question;
+    // Add language instruction to question
+    let finalQuestion = question;
+    if (selectedLanguage === "ko") {
+      finalQuestion = `${question}\n\n(Please respond in Korean / 한국어로 답변해주세요)`;
+    }
+
+    const currentQuestion = finalQuestion;
     setQuestion("");
     setIsAsking(true);
     setError("");
@@ -182,10 +190,14 @@ export default function ChatInterface({
             <div className="flex flex-col items-center justify-center h-full text-center space-y-3 py-12">
               <MessageCircle className="h-12 w-12 text-muted-foreground/50" />
               <p className="text-muted-foreground">
-                Ask any question about the paper...
+                {selectedLanguage === "ko"
+                  ? "논문에 대해 질문해보세요..."
+                  : "Ask any question about the paper..."}
               </p>
               <p className="text-xs text-muted-foreground">
-                Try asking about methodology, results, or conclusions
+                {selectedLanguage === "ko"
+                  ? "방법론, 결과, 결론 등에 대해 물어보세요"
+                  : "Try asking about methodology, results, or conclusions"}
               </p>
             </div>
           ) : (
@@ -271,7 +283,11 @@ export default function ChatInterface({
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask a question about the paper..."
+            placeholder={
+              selectedLanguage === "ko"
+                ? "논문에 대해 질문하세요..."
+                : "Ask a question about the paper..."
+            }
             disabled={isAsking}
             className="flex-1"
           />
