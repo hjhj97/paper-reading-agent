@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { normalizeMathNotation } from "@/lib/mathUtils";
 import {
   Card,
   CardContent,
@@ -166,8 +169,11 @@ export default function SummaryDisplay({
         {summary && (
           <div className="space-y-4">
             <div className="markdown bg-muted/30 p-6 rounded-lg border">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {summary}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+              >
+                {normalizeMathNotation(summary)}
               </ReactMarkdown>
             </div>
 

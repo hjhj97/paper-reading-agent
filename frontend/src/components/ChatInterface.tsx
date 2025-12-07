@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { normalizeMathNotation } from "@/lib/mathUtils";
 import {
   Card,
   CardContent,
@@ -240,8 +243,11 @@ export default function ChatInterface({
 
                       <div className="text-sm markdown">
                         {message.role === "assistant" ? (
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {message.content}
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                          >
+                            {normalizeMathNotation(message.content)}
                           </ReactMarkdown>
                         ) : (
                           <p className="whitespace-pre-wrap">

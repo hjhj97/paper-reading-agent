@@ -81,7 +81,12 @@ Please provide a comprehensive yet concise summary of the following academic pap
 - Acknowledged limitations
 - Suggested future research directions
 
-Keep the summary between 400-600 words. Use clear, academic language while making the content accessible. Focus on the most significant aspects of the research."""
+Keep the summary between 400-600 words. Use clear, academic language while making the content accessible. Focus on the most significant aspects of the research.
+
+IMPORTANT: For mathematical formulas, use proper LaTeX syntax:
+- For inline math: $formula$
+- For block/display math: $$formula$$ (on separate lines)
+- Do NOT use brackets [ ] or \\[ \\] for formulas."""
         
         # Use custom prompt if provided
         system_prompt = custom_prompt if custom_prompt else default_prompt
@@ -169,14 +174,20 @@ Please provide a clear and concise answer based on the context above."""
         model_to_use = model or self.default_model
         
         system_prompt = """You are a helpful research assistant. Answer the user's question based on the provided context from a research paper.
-If the answer is not clearly stated in the context, say so. Always be factual and cite relevant parts of the context."""
+If the answer is not clearly stated in the context, say so. Always be factual and cite relevant parts of the context.
+
+IMPORTANT: For mathematical formulas, use proper LaTeX syntax:
+- For inline math: $formula$
+- For block/display math: $$formula$$ (on separate lines)
+- Example: $$f(x) = x^2 + 2x + 1$$
+- Do NOT use brackets [ ] or \\[ \\] for formulas."""
         
         user_message = f"""Context from paper:
 {context}
 
 Question: {question}
 
-Please provide a clear and concise answer based on the context above."""
+Please provide a clear and concise answer based on the context above. Use $$...$$ for mathematical formulas."""
         
         try:
             stream = self.client.chat.completions.create(
