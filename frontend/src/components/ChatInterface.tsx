@@ -2,6 +2,25 @@
 
 import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  MessageCircle,
+  Send,
+  User,
+  Bot,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -140,121 +159,135 @@ export default function ChatInterface({
   };
 
   return (
-    <div className="card">
-      <h2>💬 Ask Questions About the Paper</h2>
-
-      {error && <div className="error">{error}</div>}
-
-      <div
-        style={{
-          background: "#f9fafb",
-          borderRadius: "4px",
-          padding: "1rem",
-          marginBottom: "1rem",
-          minHeight: "300px",
-          maxHeight: "500px",
-          overflowY: "auto",
-        }}
-      >
-        {messages.length === 0 ? (
-          <p
-            style={{ color: "#9ca3af", textAlign: "center", marginTop: "2rem" }}
-          >
-            Ask any question about the paper...
-          </p>
-        ) : (
-          <>
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                style={{
-                  marginBottom: "1rem",
-                  padding: "1rem",
-                  borderRadius: "4px",
-                  background: message.role === "user" ? "#dbeafe" : "#ffffff",
-                  border:
-                    message.role === "assistant" ? "1px solid #e5e7eb" : "none",
-                }}
-              >
-                <div style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
-                  {message.role === "user" ? "👤 You" : "🤖 Assistant"}
-                  {message.isStreaming && (
-                    <span
-                      style={{
-                        marginLeft: "0.5rem",
-                        color: "#10b981",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      ●
-                    </span>
-                  )}
-                </div>
-                <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.6" }}>
-                  {message.content}
-                  {message.isStreaming && (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: "8px",
-                        height: "16px",
-                        background: "#2563eb",
-                        marginLeft: "2px",
-                        animation: "blink 1s infinite",
-                      }}
-                    />
-                  )}
-                </div>
-                {message.sources && message.sources.length > 0 && (
-                  <div
-                    style={{
-                      marginTop: "0.5rem",
-                      fontSize: "0.85rem",
-                      color: "#6b7280",
-                      fontStyle: "italic",
-                    }}
-                  >
-                    Sources: {message.sources.join(", ")}
-                  </div>
-                )}
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MessageCircle className="h-5 w-5" />
+          Ask Questions About the Paper
+        </CardTitle>
+        <CardDescription>
+          Get instant answers from the paper using AI
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </div>
         )}
-      </div>
 
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <input
-          type="text"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Ask a question about the paper..."
-          disabled={isAsking}
-          style={{ marginBottom: 0, flex: 1 }}
-        />
-        <button
-          onClick={handleAsk}
-          disabled={isAsking || !question.trim()}
-          style={{ marginBottom: 0 }}
-        >
-          {isAsking ? "Asking..." : "Ask"}
-        </button>
-      </div>
+        <div className="bg-muted/30 rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto border">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-3 py-12">
+              <MessageCircle className="h-12 w-12 text-muted-foreground/50" />
+              <p className="text-muted-foreground">
+                Ask any question about the paper...
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Try asking about methodology, results, or conclusions
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex gap-3 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  {message.role === "assistant" && (
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+                  )}
 
-      <style jsx>{`
-        @keyframes blink {
-          0%,
-          49% {
-            opacity: 1;
-          }
-          50%,
-          100% {
-            opacity: 0;
-          }
-        }
-      `}</style>
-    </div>
+                  <div
+                    className={`flex-1 max-w-[80%] ${
+                      message.role === "user" ? "text-right" : ""
+                    }`}
+                  >
+                    <div
+                      className={`inline-block p-3 rounded-lg ${
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background border"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium opacity-70">
+                          {message.role === "user" ? "You" : "Assistant"}
+                        </span>
+                        {message.isStreaming && (
+                          <Loader2 className="h-3 w-3 animate-spin text-green-500" />
+                        )}
+                      </div>
+
+                      <div className="text-sm markdown">
+                        {message.role === "assistant" ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.content}
+                          </ReactMarkdown>
+                        ) : (
+                          <p className="whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        )}
+                        {message.isStreaming && (
+                          <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
+                        )}
+                      </div>
+
+                      {message.sources && message.sources.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-current/20">
+                          <p className="text-xs opacity-70 italic">
+                            Sources: {message.sources.join(", ")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {message.role === "user" && (
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask a question about the paper..."
+            disabled={isAsking}
+            className="flex-1"
+          />
+          <Button
+            onClick={handleAsk}
+            disabled={isAsking || !question.trim()}
+            size="icon"
+          >
+            {isAsking ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

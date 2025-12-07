@@ -1,228 +1,138 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: #f5f5f5;
-  color: #333;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Markdown styles */
+.markdown {
+  @apply text-sm leading-relaxed;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 3rem;
-  padding: 2rem 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.markdown h1 {
+  @apply text-2xl font-bold mt-6 mb-4;
 }
 
-.header h1 {
-  font-size: 2.5rem;
-  color: #2563eb;
-  margin-bottom: 0.5rem;
+.markdown h2 {
+  @apply text-xl font-bold mt-5 mb-3;
 }
 
-.header p {
-  font-size: 1.1rem;
-  color: #666;
+.markdown h3 {
+  @apply text-lg font-semibold mt-4 mb-2;
 }
 
-.card {
-  background: white;
-  border-radius: 8px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.markdown p {
+  @apply mb-4;
 }
 
-.card h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #333;
+.markdown ul,
+.markdown ol {
+  @apply mb-4 ml-6;
 }
 
-button {
-  background: #2563eb;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
+.markdown ul {
+  @apply list-disc;
 }
 
-button:hover {
-  background: #1d4ed8;
+.markdown ol {
+  @apply list-decimal;
 }
 
-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
+.markdown li {
+  @apply mb-1;
 }
 
-input[type="text"],
-input[type="file"],
-textarea,
-select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1rem;
-  margin-bottom: 1rem;
+.markdown code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
 }
 
-textarea {
-  min-height: 120px;
-  resize: vertical;
-  font-family: inherit;
+.markdown pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto mb-4;
 }
 
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
+.markdown pre code {
+  @apply bg-transparent p-0;
 }
 
-.error {
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+.markdown blockquote {
+  @apply border-l-4 border-primary pl-4 italic my-4;
 }
 
-.success {
-  background: #d1fae5;
-  color: #065f46;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+.markdown a {
+  @apply text-primary hover:underline;
 }
 
-/* Markdown Content Styles */
-.markdown-content h1 {
-  font-size: 1.75rem;
-  font-weight: bold;
-  margin: 1.5rem 0 1rem 0;
-  color: #1f2937;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 0.5rem;
+.markdown table {
+  @apply w-full border-collapse mb-4;
 }
 
-.markdown-content h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 1.25rem 0 0.75rem 0;
-  color: #374151;
+.markdown th,
+.markdown td {
+  @apply border border-border px-4 py-2 text-left;
 }
 
-.markdown-content h3 {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin: 1rem 0 0.5rem 0;
-  color: #4b5563;
+.markdown th {
+  @apply bg-muted font-semibold;
 }
 
-.markdown-content p {
-  margin: 0.75rem 0;
-  line-height: 1.7;
+.markdown strong {
+  @apply font-semibold;
 }
 
-.markdown-content ul, .markdown-content ol {
-  margin: 0.75rem 0;
-  padding-left: 2rem;
+.markdown em {
+  @apply italic;
 }
-
-.markdown-content li {
-  margin: 0.25rem 0;
-  line-height: 1.6;
-}
-
-.markdown-content code {
-  background: #f3f4f6;
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9em;
-}
-
-.markdown-content pre {
-  background: #1f2937;
-  color: #f9fafb;
-  padding: 1rem;
-  border-radius: 4px;
-  overflow-x: auto;
-  margin: 1rem 0;
-}
-
-.markdown-content pre code {
-  background: transparent;
-  padding: 0;
-  color: #f9fafb;
-}
-
-.markdown-content blockquote {
-  border-left: 4px solid #2563eb;
-  padding-left: 1rem;
-  margin: 1rem 0;
-  color: #4b5563;
-  font-style: italic;
-}
-
-.markdown-content strong {
-  font-weight: bold;
-  color: #1f2937;
-}
-
-.markdown-content em {
-  font-style: italic;
-}
-
-.markdown-content a {
-  color: #2563eb;
-  text-decoration: underline;
-}
-
-.markdown-content a:hover {
-  color: #1d4ed8;
-}
-
-.markdown-content hr {
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 1.5rem 0;
-}
-
-.markdown-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.markdown-content th,
-.markdown-content td {
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.markdown-content th {
-  background: #f3f4f6;
-  font-weight: bold;
-}
-

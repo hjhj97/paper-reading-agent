@@ -7,6 +7,16 @@ import ModelSelector from "@/components/ModelSelector";
 import SummaryDisplay from "@/components/SummaryDisplay";
 import ChatInterface from "@/components/ChatInterface";
 import PdfViewer from "@/components/PdfViewer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  Loader2,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+} from "lucide-react";
 
 export default function PaperPage() {
   const params = useParams();
@@ -46,9 +56,16 @@ export default function PaperPage() {
 
   if (isLoading) {
     return (
-      <div className="container">
-        <div className="card">
-          <p className="loading">Loading paper...</p>
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <Card>
+            <CardContent className="flex items-center justify-center p-12">
+              <div className="text-center space-y-3">
+                <Loader2 className="h-10 w-10 text-primary mx-auto animate-spin" />
+                <p className="text-muted-foreground">Loading paper...</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -56,141 +73,151 @@ export default function PaperPage() {
 
   if (error || !session) {
     return (
-      <div className="container">
-        <div className="card">
-          <div className="error">{error || "Paper not found"}</div>
-          <button onClick={() => router.push("/")}>Go Back Home</button>
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <Card>
+            <CardContent className="p-8 text-center space-y-4">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+              <div className="text-destructive font-semibold">
+                {error || "Paper not found"}
+              </div>
+              <Button onClick={() => router.push("/")} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back Home
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <div className="header">
-        <h1>📄 Paper Reading Agent</h1>
-        <p>AI-powered paper summarization and Q&A system</p>
-      </div>
-
-      <div className="card">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem",
-          }}
-        >
-          <h2>📑 {session.filename}</h2>
-          <button
-            onClick={() => router.push("/")}
-            style={{ background: "#6b7280", padding: "0.5rem 1rem" }}
-          >
-            ← Upload New Paper
-          </button>
-        </div>
-        <p style={{ color: "#666", marginBottom: "1rem" }}>
-          Session ID:{" "}
-          <code
-            style={{
-              background: "#f3f4f6",
-              padding: "0.25rem 0.5rem",
-              borderRadius: "4px",
-            }}
-          >
-            {session.session_id}
-          </code>
-        </p>
-        <p style={{ color: "#666" }}>
-          Uploaded: {new Date(session.created_at).toLocaleString()}
-        </p>
-      </div>
-
-      <ModelSelector
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
-      />
-
-      {/* PDF Viewer or Raw Text */}
-      {session.has_pdf ? (
-        <>
-          <PdfViewer
-            pdfUrl={getPdfUrl(sessionId)}
-            filename={session.filename}
-          />
-
-          {/* Toggle to show raw text */}
-          <div className="card">
-            <button
-              onClick={() => setShowRawText(!showRawText)}
-              style={{
-                background: "#6b7280",
-                width: "100%",
-                padding: "0.75rem",
-              }}
-            >
-              {showRawText
-                ? "🔼 Hide Extracted Text"
-                : "🔽 Show Extracted Text"}
-            </button>
-
-            {showRawText && (
-              <div
-                style={{
-                  marginTop: "1rem",
-                  background: "#f9fafb",
-                  padding: "1.5rem",
-                  borderRadius: "4px",
-                  maxHeight: "400px",
-                  overflowY: "auto",
-                  lineHeight: "1.8",
-                  whiteSpace: "pre-wrap",
-                  fontFamily: "Georgia, serif",
-                  fontSize: "0.95rem",
-                  border: "1px solid #e5e7eb",
-                }}
-              >
-                {session.text}
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <div className="card">
-          <h2>📖 Paper Content</h2>
-          <div
-            style={{
-              background: "#f9fafb",
-              padding: "1.5rem",
-              borderRadius: "4px",
-              maxHeight: "400px",
-              overflowY: "auto",
-              lineHeight: "1.8",
-              whiteSpace: "pre-wrap",
-              fontFamily: "Georgia, serif",
-              fontSize: "0.95rem",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            {session.text}
-          </div>
-          <p style={{ marginTop: "0.5rem", color: "#666", fontSize: "0.9rem" }}>
-            Total characters: {session.text.length.toLocaleString()}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            📄 Paper Reading Agent
+          </h1>
+          <p className="text-muted-foreground">
+            AI-powered paper summarization and Q&A system
           </p>
         </div>
-      )}
 
-      <SummaryDisplay
-        sessionId={sessionId}
-        selectedModel={selectedModel}
-        onSummaryGenerated={handleSummaryGenerated}
-        autoSummarize={true}
-        initialSummary={session.summary}
-      />
+        {/* Paper Info */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1 space-y-2">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <FileText className="h-5 w-5" />
+                  {session.filename}
+                </CardTitle>
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <div>
+                    Session ID:{" "}
+                    <code className="bg-muted px-2 py-1 rounded text-xs">
+                      {session.session_id}
+                    </code>
+                  </div>
+                  <div>
+                    Uploaded: {new Date(session.created_at).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={() => router.push("/")}
+                variant="outline"
+                size="sm"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Upload New Paper
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
 
-      {hasSummary && (
-        <ChatInterface sessionId={sessionId} selectedModel={selectedModel} />
-      )}
+        {/* Model Selector */}
+        <ModelSelector
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+        />
+
+        {/* PDF Viewer or Raw Text */}
+        {session.has_pdf ? (
+          <>
+            <PdfViewer
+              pdfUrl={getPdfUrl(sessionId)}
+              filename={session.filename}
+            />
+
+            {/* Toggle to show raw text */}
+            <Card>
+              <CardContent className="p-4">
+                <Button
+                  onClick={() => setShowRawText(!showRawText)}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  {showRawText ? (
+                    <>
+                      <ChevronUp className="mr-2 h-4 w-4" />
+                      Hide Extracted Text
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="mr-2 h-4 w-4" />
+                      Show Extracted Text
+                    </>
+                  )}
+                </Button>
+
+                {showRawText && (
+                  <div className="mt-4 bg-muted/30 p-6 rounded-lg max-h-[400px] overflow-y-auto border">
+                    <pre className="whitespace-pre-wrap font-serif text-sm leading-relaxed">
+                      {session.text}
+                    </pre>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Paper Content
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/30 p-6 rounded-lg max-h-[400px] overflow-y-auto border">
+                <pre className="whitespace-pre-wrap font-serif text-sm leading-relaxed">
+                  {session.text}
+                </pre>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Total characters: {session.text.length.toLocaleString()}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Summary Display */}
+        <SummaryDisplay
+          sessionId={sessionId}
+          selectedModel={selectedModel}
+          onSummaryGenerated={handleSummaryGenerated}
+          autoSummarize={true}
+          initialSummary={session.summary}
+        />
+
+        {/* Chat Interface (only shown after summary is generated) */}
+        {hasSummary && (
+          <ChatInterface sessionId={sessionId} selectedModel={selectedModel} />
+        )}
+      </div>
     </div>
   );
 }
