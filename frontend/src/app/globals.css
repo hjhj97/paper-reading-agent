@@ -74,6 +74,29 @@
   overflow-y: hidden;
 }
 
+/* PDF Viewer styles */
+.rpv-core__viewer {
+  border: none !important;
+}
+
+.rpv-core__inner-page {
+  background-color: #f5f5f5;
+}
+
+.rpv-default-layout__container {
+  border: none !important;
+}
+
+.rpv-default-layout__toolbar {
+  background-color: hsl(var(--background)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+}
+
+.rpv-default-layout__sidebar {
+  background-color: hsl(var(--background)) !important;
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
 .markdown h1 {
   @apply text-2xl font-bold mt-6 mb-4;
 }

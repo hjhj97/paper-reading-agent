@@ -1,5 +1,12 @@
 "use client";
 
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+
+// Import styles
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
 import {
   Card,
   CardContent,
@@ -15,6 +22,14 @@ interface PdfViewerProps {
 }
 
 export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
+  // Create default layout plugin instance with toolbar, sidebar, etc.
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: (defaultTabs) => [
+      defaultTabs[0], // Thumbnails
+      defaultTabs[1], // Bookmarks
+    ],
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -22,15 +37,19 @@ export default function PdfViewer({ pdfUrl, filename }: PdfViewerProps) {
           <FileText className="h-5 w-5" />
           {filename}
         </CardTitle>
-        <CardDescription>PDF viewer powered by your browser</CardDescription>
+        <CardDescription>
+          Interactive PDF viewer with search, zoom, and navigation
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="w-full h-[700px] bg-muted/30 rounded-lg overflow-hidden border">
-          <iframe
-            src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-            className="w-full h-full border-0"
-            title={filename}
-          />
+        <div className="w-full h-[750px] border rounded-lg overflow-hidden bg-background">
+          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+            <Viewer 
+              fileUrl={pdfUrl}
+              plugins={[defaultLayoutPluginInstance]}
+              defaultScale={1.2}
+            />
+          </Worker>
         </div>
       </CardContent>
     </Card>
