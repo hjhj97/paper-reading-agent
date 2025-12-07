@@ -37,7 +37,7 @@ export default function Home() {
           <div className="flex justify-between items-start">
             <div className="flex-1"></div>
             <div className="flex-1 text-center">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">
                 📄 Paper Reading Agent
               </h1>
               <p className="text-xl text-muted-foreground mt-4">

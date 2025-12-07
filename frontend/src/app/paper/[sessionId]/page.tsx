@@ -110,7 +110,11 @@ export default function PaperPage() {
         {/* Header */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <Button onClick={() => router.push("/")} variant="outline" size="sm">
+            <Button
+              onClick={() => router.push("/")}
+              variant="outline"
+              size="sm"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Home
             </Button>
@@ -155,18 +159,6 @@ export default function PaperPage() {
             </div>
           </CardHeader>
         </Card>
-
-        {/* Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ModelSelector
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-          />
-          <LanguageSelector
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={setSelectedLanguage}
-          />
-        </div>
 
         {/* PDF Viewer or Raw Text */}
         {session.has_pdf ? (
@@ -227,6 +219,18 @@ export default function PaperPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Settings */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ModelSelector
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+          />
+          <LanguageSelector
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
+          />
+        </div>
 
         {/* Storyline Analysis */}
         <StorylineDisplay
