@@ -57,6 +57,9 @@ class SessionData(BaseModel):
     filename: str
     text: str
     pdf_path: Optional[str] = None
+    title: Optional[str] = None
+    authors: Optional[str] = None
+    year: Optional[str] = None
     summary: Optional[str] = None
     storyline: Optional[str] = None
     rating: Optional[str] = None
@@ -68,6 +71,9 @@ class SessionDetailResponse(BaseModel):
     filename: str
     text: str
     has_pdf: bool = False
+    title: Optional[str] = None
+    authors: Optional[str] = None
+    year: Optional[str] = None
     summary: Optional[str] = None
     storyline: Optional[str] = None
     rating: Optional[str] = None

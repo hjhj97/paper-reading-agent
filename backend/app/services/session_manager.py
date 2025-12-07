@@ -136,6 +136,27 @@ class SessionManager:
             return True
         return False
     
+    def update_metadata(self, session_id: str, title: str, authors: str, year: str) -> bool:
+        """
+        Update metadata (title, authors, year) for a session
+        
+        Args:
+            session_id: Session identifier
+            title: Paper title
+            authors: Paper authors
+            year: Publication year
+            
+        Returns:
+            True if successful, False if session not found
+        """
+        session = self._sessions.get(session_id)
+        if session:
+            session.title = title
+            session.authors = authors
+            session.year = year
+            return True
+        return False
+    
     def update_rating(self, session_id: str, rating: str) -> bool:
         """
         Update rating for a session

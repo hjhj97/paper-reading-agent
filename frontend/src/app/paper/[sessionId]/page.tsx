@@ -139,12 +139,31 @@ export default function PaperPage() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-start gap-4">
-              <div className="flex-1 space-y-2">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <FileText className="h-5 w-5" />
-                  {session.filename}
-                </CardTitle>
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <div className="flex-1 space-y-3">
+                {/* Title and Year */}
+                <div>
+                  <CardTitle className="flex items-start gap-2 text-2xl leading-tight">
+                    <FileText className="h-6 w-6 mt-1 flex-shrink-0" />
+                    <span>
+                      {session.title || session.filename}
+                      {session.year && session.year !== "Unknown" && (
+                        <span className="text-muted-foreground ml-2">
+                          ({session.year})
+                        </span>
+                      )}
+                    </span>
+                  </CardTitle>
+                </div>
+
+                {/* Authors */}
+                {session.authors && session.authors !== "Unknown" && (
+                  <div className="text-base text-muted-foreground pl-8">
+                    {session.authors}
+                  </div>
+                )}
+
+                {/* Metadata */}
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground/80 pl-8">
                   <div>
                     Session ID:{" "}
                     <code className="bg-muted px-2 py-1 rounded text-xs">

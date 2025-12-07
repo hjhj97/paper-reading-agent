@@ -49,6 +49,15 @@ async def upload_pdf(file: UploadFile = File(...)):
             pdf_content=content  # Save PDF file
         )
         
+        # Extract metadata (title, authors, year)
+        metadata = await llm_service.extract_metadata(cleaned_text)
+        session_manager.update_metadata(
+            session_id,
+            title=metadata["title"],
+            authors=metadata["authors"],
+            year=metadata["year"]
+        )
+        
         # Index document for RAG
         num_chunks = await rag_service.index_document(session_id, cleaned_text)
         
@@ -294,6 +303,9 @@ async def get_all_sessions():
             "filename": session.filename,
             "has_pdf": session.pdf_path is not None,
             "has_summary": session.summary is not None,
+            "title": session.title,
+            "authors": session.authors,
+            "year": session.year,
             "created_at": session.created_at.isoformat(),
             "text_length": len(session.text)
         }
@@ -317,6 +329,9 @@ async def get_session_detail(session_id: str):
         filename=session.filename,
         text=session.text,
         has_pdf=has_pdf,
+        title=session.title,
+        authors=session.authors,
+        year=session.year,
         summary=session.summary,
         storyline=session.storyline,
         rating=session.rating,

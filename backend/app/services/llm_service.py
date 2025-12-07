@@ -286,6 +286,66 @@ IMPORTANT:
         
         except Exception as e:
             raise Exception(f"Failed to analyze storyline: {str(e)}")
+    
+    async def extract_metadata(
+        self,
+        paper_text: str
+    ) -> dict:
+        """
+        Extract paper metadata (title, authors, year) from text
+        
+        Args:
+            paper_text: Full text of the paper (first part)
+            
+        Returns:
+            Dictionary with title, authors, year
+        """
+        system_prompt = """You are a metadata extraction expert. Extract the paper's title, authors, and publication year from the provided text.
+
+Return your answer in EXACTLY this format:
+TITLE: [paper title]
+AUTHORS: [comma-separated author names]
+YEAR: [publication year]
+
+If any field is not found, use "Unknown" for that field."""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",  # Use fast model for metadata
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Extract metadata from this paper:\n\n{paper_text[:3000]}"}
+                ],
+                temperature=0.3,
+                max_tokens=200
+            )
+            
+            result = response.choices[0].message.content
+            
+            # Parse the result
+            metadata = {
+                "title": "Unknown",
+                "authors": "Unknown",
+                "year": "Unknown"
+            }
+            
+            for line in result.split('\n'):
+                if line.startswith('TITLE:'):
+                    metadata['title'] = line.replace('TITLE:', '').strip()
+                elif line.startswith('AUTHORS:'):
+                    metadata['authors'] = line.replace('AUTHORS:', '').strip()
+                elif line.startswith('YEAR:'):
+                    metadata['year'] = line.replace('YEAR:', '').strip()
+            
+            return metadata
+        
+        except Exception as e:
+            print(f"Warning: Failed to extract metadata: {str(e)}")
+            return {
+                "title": "Unknown",
+                "authors": "Unknown",
+                "year": "Unknown"
+            }
 
 
 # Global LLM service instance

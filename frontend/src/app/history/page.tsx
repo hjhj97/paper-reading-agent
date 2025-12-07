@@ -133,12 +133,29 @@ export default function HistoryPage() {
               >
                 <CardHeader>
                   <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center gap-2 mb-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        {session.filename}
+                    <div className="flex-1 space-y-2">
+                      {/* Title and Year */}
+                      <CardTitle className="flex items-start gap-2 mb-1">
+                        <FileText className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                        <span className="leading-tight">
+                          {session.title || session.filename}
+                          {session.year && session.year !== "Unknown" && (
+                            <span className="text-base text-muted-foreground ml-2">
+                              ({session.year})
+                            </span>
+                          )}
+                        </span>
                       </CardTitle>
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      
+                      {/* Authors */}
+                      {session.authors && session.authors !== "Unknown" && (
+                        <div className="text-sm text-muted-foreground pl-7">
+                          {session.authors}
+                        </div>
+                      )}
+                      
+                      {/* Metadata */}
+                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground/80 pl-7">
                         <div className="flex items-center gap-1">
                           {session.has_summary ? (
                             <>
@@ -156,7 +173,7 @@ export default function HistoryPage() {
                         <div>📄 {formatFileSize(session.text_length)}</div>
                       </div>
                     </div>
-                    <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                    <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded h-fit">
                       {session.session_id.slice(0, 8)}...
                     </div>
                   </div>
