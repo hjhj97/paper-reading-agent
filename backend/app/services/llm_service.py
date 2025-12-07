@@ -207,6 +207,85 @@ Please provide a clear and concise answer based on the context above. Use $$...$
         
         except Exception as e:
             raise Exception(f"Failed to generate answer: {str(e)}")
+    
+    async def analyze_storyline(
+        self,
+        paper_text: str,
+        model: Optional[str] = None,
+        language: str = "en"
+    ) -> str:
+        """
+        Analyze the paper's storyline/narrative flow
+        
+        Args:
+            paper_text: Full text of the paper
+            model: Model to use (defaults to configured default)
+            
+        Returns:
+            Storyline analysis
+        """
+        model_to_use = model or self.default_model
+        
+        # Adjust prompt based on language
+        if language == "ko":
+            system_prompt = """당신은 연구 논문 분석 전문가입니다. 논문의 스토리라인을 분석하여 정확히 다음 형식으로 답변하세요 (600자 이내):
+
+**문제 제기**
+- [논문이 다루는 주요 문제나 연구 공백 설명]
+
+**기존 방법론의 한계**
+- [기존 접근법의 한계점 설명]
+
+**본 논문의 방법론**
+- [제안된 방법론이나 솔루션 설명]
+
+**결과 및 기대효과**
+- [주요 결과와 기대되는 영향 요약]
+
+중요:
+- 전체 길이 600자 이내로 유지
+- 각 섹션당 1-2개의 간결한 불릿 포인트만 사용
+- 핵심 스토리라인에만 집중
+- 수식은 LaTeX 형식 사용: $인라인$ 또는 $$블록$$"""
+            user_message = f"논문 텍스트:\n\n{paper_text[:15000]}"
+        else:
+            system_prompt = """You are an expert research paper analyst. Analyze the paper's storyline and structure your response in EXACTLY this format (600 characters or less):
+
+**Problem Statement (문제 제기)**
+- [Identify the main problem or research gap]
+
+**Limitations of Existing Methods (기존 방법론의 한계)**
+- [Explain limitations of existing approaches]
+
+**Proposed Methodology (본 논문의 방법론)**
+- [Describe the proposed methodology]
+
+**Results & Expected Impact (결과 및 기대효과)**
+- [Summarize key results and expected impact]
+
+IMPORTANT:
+- Keep TOTAL length under 600 characters
+- Use 1-2 concise bullet points per section
+- Focus on the main storyline only
+- Use proper LaTeX for formulas: $inline$ or $$block$$"""
+            user_message = f"Paper text:\n\n{paper_text[:15000]}"
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=model_to_use,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.7,
+                max_tokens=800
+            )
+            
+            storyline = response.choices[0].message.content
+            return storyline
+        
+        except Exception as e:
+            raise Exception(f"Failed to analyze storyline: {str(e)}")
 
 
 # Global LLM service instance

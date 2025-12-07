@@ -119,6 +119,23 @@ class SessionManager:
             return True
         return False
     
+    def update_storyline(self, session_id: str, storyline: str) -> bool:
+        """
+        Update storyline analysis for a session
+        
+        Args:
+            session_id: Session identifier
+            storyline: Generated storyline analysis
+            
+        Returns:
+            True if successful, False if session not found
+        """
+        session = self._sessions.get(session_id)
+        if session:
+            session.storyline = storyline
+            return True
+        return False
+    
     def update_rating(self, session_id: str, rating: str) -> bool:
         """
         Update rating for a session

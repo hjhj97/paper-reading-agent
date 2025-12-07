@@ -4,6 +4,8 @@ from app.models.schemas import (
     UploadResponse,
     SummarizeRequest,
     SummarizeResponse,
+    StorylineRequest,
+    StorylineResponse,
     AskRequest,
     AskResponse,
     RateRequest,
@@ -93,6 +95,41 @@ async def summarize_paper(request: SummarizeRequest):
             model=model_used
         )
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/storyline", response_model=StorylineResponse)
+async def analyze_storyline(request: StorylineRequest):
+    """
+    Analyze the paper's storyline/narrative flow
+    """
+    # Check if session exists
+    session = session_manager.get_session(request.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    try:
+        # Get the paper text
+        paper_text = session.text
+        
+        # Generate storyline analysis
+        storyline = await llm_service.analyze_storyline(
+            paper_text=paper_text,
+            model=request.model,
+            language=request.language or "en"
+        )
+        
+        # Update session with storyline
+        session_manager.update_storyline(request.session_id, storyline)
+        
+        model_used = request.model or llm_service.default_model
+        
+        return StorylineResponse(
+            session_id=request.session_id,
+            storyline=storyline,
+            model=model_used
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -281,6 +318,7 @@ async def get_session_detail(session_id: str):
         text=session.text,
         has_pdf=has_pdf,
         summary=session.summary,
+        storyline=session.storyline,
         rating=session.rating,
         created_at=session.created_at.isoformat()
     )

@@ -6,6 +6,7 @@ import { api, SessionDetail, getPdfUrl } from "@/lib/api";
 import ModelSelector from "@/components/ModelSelector";
 import LanguageSelector from "@/components/LanguageSelector";
 import SummaryDisplay from "@/components/SummaryDisplay";
+import StorylineDisplay from "@/components/StorylineDisplay";
 import ChatInterface from "@/components/ChatInterface";
 import PdfViewer from "@/components/PdfViewer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -226,6 +227,15 @@ export default function PaperPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Storyline Analysis */}
+        <StorylineDisplay
+          sessionId={sessionId}
+          selectedModel={selectedModel}
+          selectedLanguage={selectedLanguage}
+          autoAnalyze={true}
+          initialStoryline={session.storyline}
+        />
 
         {/* Summary Display */}
         <SummaryDisplay

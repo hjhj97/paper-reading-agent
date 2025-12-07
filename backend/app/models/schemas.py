@@ -58,6 +58,7 @@ class SessionData(BaseModel):
     text: str
     pdf_path: Optional[str] = None
     summary: Optional[str] = None
+    storyline: Optional[str] = None
     rating: Optional[str] = None
     created_at: datetime
 
@@ -68,6 +69,19 @@ class SessionDetailResponse(BaseModel):
     text: str
     has_pdf: bool = False
     summary: Optional[str] = None
+    storyline: Optional[str] = None
     rating: Optional[str] = None
     created_at: str
+
+
+class StorylineRequest(BaseModel):
+    session_id: str
+    model: Optional[str] = None
+    language: Optional[str] = "en"  # "en" or "ko"
+
+
+class StorylineResponse(BaseModel):
+    session_id: str
+    storyline: str
+    model: str
 
