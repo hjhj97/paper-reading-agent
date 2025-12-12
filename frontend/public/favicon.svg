@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#3b82f6" stroke="#1e40af" stroke-width="2"/>
+  
+  <!-- Paper/Document -->
+  <rect x="30" y="25" width="40" height="50" rx="2" fill="#ffffff"/>
+  
+  <!-- Text lines on paper -->
+  <line x1="35" y1="33" x2="60" y2="33" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+  <line x1="35" y1="40" x2="65" y2="40" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+  <line x1="35" y1="47" x2="58" y2="47" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+  <line x1="35" y1="54" x2="63" y2="54" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+  <line x1="35" y1="61" x2="55" y2="61" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- AI Sparkle icon -->
+  <g transform="translate(60, 60)">
+    <circle cx="0" cy="0" r="12" fill="#fbbf24" opacity="0.9"/>
+    <path d="M 0,-8 L 1,-1 L 8,0 L 1,1 L 0,8 L -1,1 L -8,0 L -1,-1 Z" fill="#ffffff"/>
+  </g>
+</svg>
+
