@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Docker 배포를 위해 추가
   reactStrictMode: true,
   async rewrites() {
     return [
