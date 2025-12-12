@@ -10,16 +10,6 @@ RUN npm ci
 # 소스 코드 복사
 COPY . .
 
-# 디버깅: 파일 구조 확인
-RUN echo "=== Checking directory structure ===" && \
-    ls -la && \
-    echo "=== Checking src directory ===" && \
-    ls -la src/ && \
-    echo "=== Checking src/lib directory ===" && \
-    ls -la src/lib/ && \
-    echo "=== Checking tsconfig.json ===" && \
-    cat tsconfig.json
-
 # public 디렉토리가 없으면 생성 (static 파일용)
 RUN mkdir -p public
 

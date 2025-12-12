@@ -18,9 +18,6 @@ allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLO
     "http://frontend:3000",  # Docker 컨테이너 이름
 ]
 
-# 디버그: CORS 설정 출력
-print(f"🔒 CORS Allowed Origins: {allowed_origins}")
-
 # CORS middleware for frontend communication
 app.add_middleware(
     CORSMiddleware,
