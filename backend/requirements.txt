@@ -11,4 +11,5 @@ langchain-text-splitters>=0.0.1
 langchain-community>=0.0.1
 pinecone>=5.0.0
 PyPDF2>=3.0.0
+langfuse>=2.0.0
 

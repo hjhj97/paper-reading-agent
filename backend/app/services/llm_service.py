@@ -1,13 +1,44 @@
 from openai import OpenAI
 from app.config import settings
 from typing import Optional
+import os
+
+# Langfuse integration via OpenAI wrapper (optional)
+LANGFUSE_ENABLED = False
+LangfuseOpenAI = None
+
+try:
+    if settings.langfuse_secret_key and settings.langfuse_public_key:
+        # Set environment variables for Langfuse
+        os.environ["LANGFUSE_SECRET_KEY"] = settings.langfuse_secret_key
+        os.environ["LANGFUSE_PUBLIC_KEY"] = settings.langfuse_public_key
+        os.environ["LANGFUSE_HOST"] = settings.langfuse_host or "https://cloud.langfuse.com"
+        
+        from langfuse.openai import OpenAI as _LangfuseOpenAI
+        LangfuseOpenAI = _LangfuseOpenAI
+        LANGFUSE_ENABLED = True
+        print(f"✅ Langfuse enabled (host: {settings.langfuse_host})")
+    else:
+        print("ℹ️ Langfuse disabled (API keys not set)")
+except Exception as e:
+    print(f"ℹ️ Langfuse not available: {e}")
 
 
 class LLMService:
     """Service for interacting with OpenAI LLM"""
     
     def __init__(self):
+        # Standard OpenAI client (always works)
         self.client = OpenAI(api_key=settings.openai_api_key)
+        # Langfuse-wrapped client for traced calls (if available)
+        if LANGFUSE_ENABLED and LangfuseOpenAI:
+            try:
+                self.traced_client = LangfuseOpenAI(api_key=settings.openai_api_key)
+            except Exception as e:
+                print(f"⚠️ Langfuse client init failed: {e}")
+                self.traced_client = self.client
+        else:
+            self.traced_client = self.client
         self.default_model = settings.default_model
     
     def get_available_models(self):
@@ -92,7 +123,8 @@ IMPORTANT: For mathematical formulas, use proper LaTeX syntax:
         system_prompt = custom_prompt if custom_prompt else default_prompt
         
         try:
-            response = self.client.chat.completions.create(
+            # Use traced client for Langfuse logging
+            response = self.traced_client.chat.completions.create(
                 model=model_to_use,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -190,7 +222,8 @@ Question: {question}
 Please provide a clear and concise answer based on the context above. Use $$...$$ for mathematical formulas."""
         
         try:
-            stream = self.client.chat.completions.create(
+            # Use traced client for Langfuse logging
+            stream = self.traced_client.chat.completions.create(
                 model=model_to_use,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -271,7 +304,8 @@ IMPORTANT:
             user_message = f"Paper text:\n\n{paper_text[:15000]}"
         
         try:
-            response = self.client.chat.completions.create(
+            # Use traced client for Langfuse logging
+            response = self.traced_client.chat.completions.create(
                 model=model_to_use,
                 messages=[
                     {"role": "system", "content": system_prompt},
