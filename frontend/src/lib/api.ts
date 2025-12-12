@@ -65,9 +65,10 @@ export interface SessionSummary {
 }
 
 // 환경 변수로 API URL 설정 (Docker/프로덕션 환경 지원)
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL 
-  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
-  : "http://localhost:8000/api";
+// 기본값을 /api로 설정하여 Nginx 리버스 프록시 사용
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL !== undefined
+  ? (process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : "/api")
+  : "/api";
 
 export const getPdfUrl = (sessionId: string): string => {
   return `${API_BASE_URL}/session/${sessionId}/pdf`;

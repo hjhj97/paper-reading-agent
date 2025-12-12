@@ -5,6 +5,12 @@ import "katex/dist/katex.min.css";
 export const metadata: Metadata = {
   title: "Paper Reading Agent",
   description: "AI-powered paper summarization and Q&A system",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml", sizes: "any" },
+    ],
+  },
 };
 
 export default function RootLayout({

@@ -26,6 +26,10 @@ RUN mkdir -p public
 # 환경 변수 설정 (빌드 시)
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Build argument for API URL
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Next.js 빌드
 RUN npm run build
 
