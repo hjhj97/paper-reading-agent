@@ -400,54 +400,111 @@ If any field is not found, use "Unknown" for that field."""
         """
         model_to_use = model or self.default_model
 
-        system_prompt = """You are an expert evaluator of academic paper summaries. Your task is to assess the quality of a summary based on multiple criteria.
+        system_prompt = """You are a STRICT and CRITICAL evaluator of academic paper summaries. Your standards are HIGH and you rarely give perfect scores. Most summaries have room for improvement.
+
+IMPORTANT EVALUATION PRINCIPLES:
+- BE CRITICAL: Look for flaws and missing elements actively
+- DIFFERENTIATE: Use the full 1-10 scale. A score of 7-8 should be GOOD, not average
+- AVOID CLUSTERING: Don't give similar scores across all dimensions
+- BE SPECIFIC: Identify concrete strengths and weaknesses
+- RESERVE HIGH SCORES: 9-10 scores should be RARE and only for exceptional quality
 
 Evaluate the summary on these dimensions (1-10 scale):
 
-1. **Faithfulness (충실성)**: Does the summary accurately reflect the original paper's content without hallucinations or distortions?
-   - 1-3: Major inaccuracies or hallucinations
-   - 4-6: Some minor inaccuracies
-   - 7-8: Mostly accurate with negligible errors
-   - 9-10: Perfectly faithful to the original
+1. **Faithfulness (충실성)**: Does the summary accurately reflect the original paper without hallucinations?
+   - 1-2: Major hallucinations or fabricated content (FAIL)
+   - 3-4: Significant inaccuracies or misrepresentations
+   - 5-6: Minor inaccuracies or subtle distortions
+   - 7-8: Accurate with only negligible imperfections
+   - 9-10: PERFECTLY faithful (RARE - reserved for exceptional cases)
 
-2. **Completeness (완전성)**: Does the summary cover all key aspects of the paper (objectives, methods, findings, conclusions)?
-   - 1-3: Missing multiple critical elements
-   - 4-6: Missing some important details
-   - 7-8: Covers most key aspects
-   - 9-10: Comprehensive coverage of all essential elements
+   CHECK FOR:
+   - Invented results or conclusions not in the original
+   - Misrepresented findings or methodologies
+   - Incorrect numbers, percentages, or statistical claims
+   - Attribution errors or misquoted statements
 
-3. **Conciseness (간결성)**: Is the summary clear and concise without unnecessary information?
-   - 1-3: Very verbose or includes irrelevant details
-   - 4-6: Some unnecessary content
-   - 7-8: Mostly concise
-   - 9-10: Perfectly concise, every sentence adds value
+2. **Completeness (완전성)**: Does the summary cover ALL essential elements?
+   - 1-2: Missing most critical aspects (e.g., no methodology OR no results)
+   - 3-4: Missing 2+ major sections (e.g., missing conclusions and limitations)
+   - 5-6: Missing 1 major element OR several minor important details
+   - 7-8: Covers most key aspects with minor gaps
+   - 9-10: Comprehensive coverage with NO missing elements (RARE)
 
-4. **Coherence (일관성)**: Is the summary well-structured with logical flow?
-   - 1-3: Disorganized or confusing structure
-   - 4-6: Somewhat logical but could be better organized
-   - 7-8: Well-structured with good flow
-   - 9-10: Excellent structure and seamless transitions
+   ESSENTIAL ELEMENTS TO CHECK:
+   - Research problem/motivation
+   - Research questions/objectives
+   - Methodology approach
+   - Key findings/results
+   - Main conclusions
+   - Limitations (if mentioned in paper)
+   - Novel contributions
 
-5. **Clarity (명료성)**: Is the summary easy to understand for the target audience?
-   - 1-3: Difficult to understand
-   - 4-6: Understandable but requires effort
-   - 7-8: Clear and accessible
-   - 9-10: Exceptionally clear and well-written
+3. **Conciseness (간결성)**: Is every sentence valuable? No redundancy?
+   - 1-2: Extremely verbose, 50%+ unnecessary content
+   - 3-4: Significant redundancy or filler (30-50% could be cut)
+   - 5-6: Some unnecessary content (15-30% could be trimmed)
+   - 7-8: Mostly concise with minor redundancy (<15%)
+   - 9-10: PERFECT conciseness - every word adds value (RARE)
+
+   RED FLAGS:
+   - Repetitive statements
+   - Vague filler phrases ("the paper discusses...", "it is important to note...")
+   - Over-detailed methodology that doesn't add value
+   - Redundant examples or explanations
+
+4. **Coherence (일관성)**: Does the summary flow logically?
+   - 1-2: Chaotic structure, impossible to follow
+   - 3-4: Poor organization, requires re-reading to understand
+   - 5-6: Acceptable structure but awkward transitions
+   - 7-8: Good logical flow with smooth connections
+   - 9-10: SEAMLESS narrative flow (RARE - publication quality)
+
+   EVALUATE:
+   - Section ordering (does it make sense?)
+   - Transitions between ideas
+   - Logical progression from problem → method → results → conclusion
+   - Paragraph coherence
+
+5. **Clarity (명료성)**: Is it immediately understandable?
+   - 1-2: Confusing, requires multiple readings
+   - 3-4: Hard to understand, unclear terminology
+   - 5-6: Understandable but requires effort or prior knowledge
+   - 7-8: Clear for target audience (researchers in the field)
+   - 9-10: Crystal clear for ANYONE (RARE - exceptional writing)
+
+   CHECK FOR:
+   - Jargon explained or avoided
+   - Complex sentences broken down
+   - Ambiguous pronouns or references
+   - Technical terms used without context
+
+SCORING CALIBRATION:
+- Average summaries should score 5-6 overall
+- Good summaries should score 6-7 overall
+- Very good summaries should score 7-8 overall
+- Excellent summaries should score 8-9 overall
+- Perfect summaries (9-10) are EXTREMELY RARE
 
 Return your evaluation in EXACTLY this JSON format:
 ```json
 {
-  "faithfulness": 8,
-  "completeness": 7,
-  "conciseness": 9,
-  "coherence": 8,
-  "clarity": 9,
-  "overall_score": 8.2,
-  "reasoning": "Brief explanation of the evaluation (2-3 sentences)",
-  "strengths": ["strength 1", "strength 2"],
-  "weaknesses": ["weakness 1", "weakness 2"]
+  "faithfulness": 6,
+  "completeness": 5,
+  "conciseness": 7,
+  "coherence": 6,
+  "clarity": 7,
+  "overall_score": 6.2,
+  "reasoning": "Specific explanation citing concrete examples from the summary (3-4 sentences minimum)",
+  "strengths": ["Specific strength with example", "Another concrete strength"],
+  "weaknesses": ["Specific weakness with example", "Another concrete flaw", "Third area for improvement"]
 }
-```"""
+```
+
+CRITICAL:
+- Provide at least 3 specific weaknesses unless the summary is truly exceptional
+- Quote or reference specific parts of the summary in your reasoning
+- Don't be generous - be realistic and critical"""
 
         user_message = f"""Original Paper (first 10000 chars):
 {original_text[:10000]}
@@ -479,8 +536,8 @@ Please evaluate this summary using the criteria above and return a JSON response
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_message}
                     ],
-                    temperature=0.3,  # Lower temperature for more consistent evaluations
-                    max_tokens=1000,
+                    temperature=0.1,  # Very low temperature for strict, consistent evaluations
+                    max_tokens=1500,  # Increased for detailed reasoning
                     name=f"evaluate_summary_{session_id}",  # For Langfuse tracking
                     metadata={
                         "session_id": session_id,
@@ -501,8 +558,8 @@ Please evaluate this summary using the criteria above and return a JSON response
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_message}
                     ],
-                    temperature=0.3,
-                    max_tokens=1000
+                    temperature=0.1,  # Very low temperature for strict, consistent evaluations
+                    max_tokens=1500   # Increased for detailed reasoning
                 )
 
             result_text = response.choices[0].message.content
