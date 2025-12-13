@@ -6,6 +6,7 @@ import os
 # Langfuse integration via OpenAI wrapper (optional)
 LANGFUSE_ENABLED = False
 LangfuseOpenAI = None
+langfuse_client = None
 
 try:
     if settings.langfuse_secret_key and settings.langfuse_public_key:
@@ -13,9 +14,11 @@ try:
         os.environ["LANGFUSE_SECRET_KEY"] = settings.langfuse_secret_key
         os.environ["LANGFUSE_PUBLIC_KEY"] = settings.langfuse_public_key
         os.environ["LANGFUSE_HOST"] = settings.langfuse_host or "https://cloud.langfuse.com"
-        
+
         from langfuse.openai import OpenAI as _LangfuseOpenAI
+        from langfuse import Langfuse
         LangfuseOpenAI = _LangfuseOpenAI
+        langfuse_client = Langfuse()
         LANGFUSE_ENABLED = True
         print(f"✅ Langfuse enabled (host: {settings.langfuse_host})")
     else:
@@ -44,20 +47,15 @@ class LLMService:
     def get_available_models(self):
         """
         Get list of available models
-        
+
         Returns:
             List of model information
         """
         return [
             {
-                "id": "gpt-4o-mini",
-                "name": "GPT-4o Mini",
-                "is_default": True
-            },
-            {
                 "id": "gpt-5-mini",
                 "name": "GPT-5 Mini",
-                "is_default": False
+                "is_default": True
             }
         ]
     
@@ -327,10 +325,10 @@ IMPORTANT:
     ) -> dict:
         """
         Extract paper metadata (title, authors, year) from text
-        
+
         Args:
             paper_text: Full text of the paper (first part)
-            
+
         Returns:
             Dictionary with title, authors, year
         """
@@ -342,10 +340,10 @@ AUTHORS: [comma-separated author names]
 YEAR: [publication year]
 
 If any field is not found, use "Unknown" for that field."""
-        
+
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",  # Use fast model for metadata
+                model=self.default_model,  # Use default model for metadata
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Extract metadata from this paper:\n\n{paper_text[:3000]}"}
@@ -353,16 +351,16 @@ If any field is not found, use "Unknown" for that field."""
                 temperature=0.3,
                 max_tokens=200
             )
-            
+
             result = response.choices[0].message.content
-            
+
             # Parse the result
             metadata = {
                 "title": "Unknown",
                 "authors": "Unknown",
                 "year": "Unknown"
             }
-            
+
             for line in result.split('\n'):
                 if line.startswith('TITLE:'):
                     metadata['title'] = line.replace('TITLE:', '').strip()
@@ -370,15 +368,233 @@ If any field is not found, use "Unknown" for that field."""
                     metadata['authors'] = line.replace('AUTHORS:', '').strip()
                 elif line.startswith('YEAR:'):
                     metadata['year'] = line.replace('YEAR:', '').strip()
-            
+
             return metadata
-        
+
         except Exception as e:
             print(f"Warning: Failed to extract metadata: {str(e)}")
             return {
                 "title": "Unknown",
                 "authors": "Unknown",
                 "year": "Unknown"
+            }
+
+    async def evaluate_summary(
+        self,
+        original_text: str,
+        summary: str,
+        model: Optional[str] = None,
+        session_id: Optional[str] = None
+    ) -> dict:
+        """
+        Evaluate summary quality using LLM-as-a-judge approach
+
+        Args:
+            original_text: Original paper text
+            summary: Generated summary to evaluate
+            model: Model to use for evaluation (defaults to gpt-5-mini)
+            session_id: Optional session ID for tracking
+
+        Returns:
+            Dictionary with evaluation scores and reasoning
+        """
+        model_to_use = model or self.default_model
+
+        system_prompt = """You are an expert evaluator of academic paper summaries. Your task is to assess the quality of a summary based on multiple criteria.
+
+Evaluate the summary on these dimensions (1-10 scale):
+
+1. **Faithfulness (충실성)**: Does the summary accurately reflect the original paper's content without hallucinations or distortions?
+   - 1-3: Major inaccuracies or hallucinations
+   - 4-6: Some minor inaccuracies
+   - 7-8: Mostly accurate with negligible errors
+   - 9-10: Perfectly faithful to the original
+
+2. **Completeness (완전성)**: Does the summary cover all key aspects of the paper (objectives, methods, findings, conclusions)?
+   - 1-3: Missing multiple critical elements
+   - 4-6: Missing some important details
+   - 7-8: Covers most key aspects
+   - 9-10: Comprehensive coverage of all essential elements
+
+3. **Conciseness (간결성)**: Is the summary clear and concise without unnecessary information?
+   - 1-3: Very verbose or includes irrelevant details
+   - 4-6: Some unnecessary content
+   - 7-8: Mostly concise
+   - 9-10: Perfectly concise, every sentence adds value
+
+4. **Coherence (일관성)**: Is the summary well-structured with logical flow?
+   - 1-3: Disorganized or confusing structure
+   - 4-6: Somewhat logical but could be better organized
+   - 7-8: Well-structured with good flow
+   - 9-10: Excellent structure and seamless transitions
+
+5. **Clarity (명료성)**: Is the summary easy to understand for the target audience?
+   - 1-3: Difficult to understand
+   - 4-6: Understandable but requires effort
+   - 7-8: Clear and accessible
+   - 9-10: Exceptionally clear and well-written
+
+Return your evaluation in EXACTLY this JSON format:
+```json
+{
+  "faithfulness": 8,
+  "completeness": 7,
+  "conciseness": 9,
+  "coherence": 8,
+  "clarity": 9,
+  "overall_score": 8.2,
+  "reasoning": "Brief explanation of the evaluation (2-3 sentences)",
+  "strengths": ["strength 1", "strength 2"],
+  "weaknesses": ["weakness 1", "weakness 2"]
+}
+```"""
+
+        user_message = f"""Original Paper (first 10000 chars):
+{original_text[:10000]}
+
+---
+
+Summary to Evaluate:
+{summary}
+
+---
+
+Please evaluate this summary using the criteria above and return a JSON response."""
+
+        try:
+            import json
+            import re
+
+            # Use traced client for Langfuse logging
+            # For Langfuse, we need to wrap the call differently
+            trace_id = None
+            observation_id = None
+
+            if LANGFUSE_ENABLED and session_id:
+                # Langfuse OpenAI wrapper doesn't accept session_id directly
+                # Instead, we can use the name parameter for tracking
+                response = self.traced_client.chat.completions.create(
+                    model=model_to_use,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_message}
+                    ],
+                    temperature=0.3,  # Lower temperature for more consistent evaluations
+                    max_tokens=1000,
+                    name=f"evaluate_summary_{session_id}",  # For Langfuse tracking
+                    metadata={
+                        "session_id": session_id,
+                        "evaluation_type": "summary_quality",
+                        "model_used": model_to_use
+                    }
+                )
+
+                # Extract trace information from response for scoring
+                if hasattr(response, '_langfuse_observation_id'):
+                    observation_id = response._langfuse_observation_id
+                if hasattr(response, '_langfuse_trace_id'):
+                    trace_id = response._langfuse_trace_id
+            else:
+                response = self.traced_client.chat.completions.create(
+                    model=model_to_use,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_message}
+                    ],
+                    temperature=0.3,
+                    max_tokens=1000
+                )
+
+            result_text = response.choices[0].message.content
+
+            # Try to find JSON block in response
+            json_match = re.search(r'```json\s*(\{.*?\})\s*```', result_text, re.DOTALL)
+            if json_match:
+                result_json = json.loads(json_match.group(1))
+            else:
+                # Try to parse the entire response as JSON
+                result_json = json.loads(result_text)
+
+            # Ensure all required fields are present
+            required_fields = ["faithfulness", "completeness", "conciseness", "coherence", "clarity"]
+            for field in required_fields:
+                if field not in result_json:
+                    result_json[field] = 5  # Default middle score
+
+            # Calculate overall score if not provided
+            if "overall_score" not in result_json:
+                result_json["overall_score"] = round(sum([
+                    result_json["faithfulness"],
+                    result_json["completeness"],
+                    result_json["conciseness"],
+                    result_json["coherence"],
+                    result_json["clarity"]
+                ]) / 5, 1)
+
+            # Log scores to Langfuse Scores tab
+            if LANGFUSE_ENABLED and langfuse_client and session_id:
+                try:
+                    # Determine trace ID for scoring
+                    scoring_trace_id = trace_id if trace_id else f"summary_{session_id}"
+
+                    # Overall score (main score)
+                    langfuse_client.create_score(
+                        name="overall_quality",
+                        value=result_json["overall_score"] / 10,  # Normalize to 0-1
+                        trace_id=scoring_trace_id,
+                        observation_id=observation_id,
+                        comment=result_json.get("reasoning", ""),
+                        data_type="NUMERIC"
+                    )
+
+                    # Individual dimension scores
+                    for dimension in ["faithfulness", "completeness", "conciseness", "coherence", "clarity"]:
+                        langfuse_client.create_score(
+                            name=dimension,
+                            value=result_json[dimension] / 10,  # Normalize to 0-1
+                            trace_id=scoring_trace_id,
+                            observation_id=observation_id,
+                            data_type="NUMERIC"
+                        )
+
+                    # Flush to ensure scores are sent
+                    langfuse_client.flush()
+
+                    print(f"📊 Scores logged to Langfuse for session {session_id}")
+
+                except Exception as score_error:
+                    print(f"⚠️  Failed to log scores to Langfuse: {score_error}")
+
+            return result_json
+
+        except json.JSONDecodeError as e:
+            print(f"Warning: Failed to parse evaluation JSON: {str(e)}")
+            # Return a default evaluation
+            return {
+                "faithfulness": 5,
+                "completeness": 5,
+                "conciseness": 5,
+                "coherence": 5,
+                "clarity": 5,
+                "overall_score": 5.0,
+                "reasoning": "Evaluation failed - unable to parse response",
+                "strengths": [],
+                "weaknesses": ["Evaluation error occurred"],
+                "error": str(e)
+            }
+        except Exception as e:
+            print(f"Warning: Failed to evaluate summary: {str(e)}")
+            return {
+                "faithfulness": 0,
+                "completeness": 0,
+                "conciseness": 0,
+                "coherence": 0,
+                "clarity": 0,
+                "overall_score": 0.0,
+                "reasoning": f"Evaluation failed: {str(e)}",
+                "strengths": [],
+                "weaknesses": ["System error during evaluation"],
+                "error": str(e)
             }
 
 

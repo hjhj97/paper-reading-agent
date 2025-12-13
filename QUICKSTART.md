@@ -30,7 +30,7 @@ OPENAI_API_KEY=your_openai_key_here
 PINECONE_API_KEY=your_pinecone_key_here
 PINECONE_ENVIRONMENT=us-west1-gcp
 PINECONE_INDEX_NAME=paper-reading-agent
-DEFAULT_MODEL=gpt-4o-mini
+DEFAULT_MODEL=gpt-5-mini
 EOF
 
 # Start backend
@@ -54,7 +54,7 @@ npm run dev
 
 Open http://localhost:3000 in your browser!
 
-1. Select a model (default: GPT-4o-mini)
+1. Select a model (default: GPT-5-mini)
 2. Upload a PDF research paper
 3. Generate summary
 4. Ask questions about the paper

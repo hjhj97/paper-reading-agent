@@ -91,3 +91,27 @@ class StorylineResponse(BaseModel):
     storyline: str
     model: str
 
+
+class EvaluateRequest(BaseModel):
+    session_id: str
+    model: Optional[str] = None
+    auto_evaluate: bool = True  # Automatically evaluate after summarization
+
+
+class EvaluationScores(BaseModel):
+    faithfulness: int
+    completeness: int
+    conciseness: int
+    coherence: int
+    clarity: int
+    overall_score: float
+    reasoning: str
+    strengths: List[str]
+    weaknesses: List[str]
+
+
+class EvaluateResponse(BaseModel):
+    session_id: str
+    evaluation: EvaluationScores
+    model: str
+

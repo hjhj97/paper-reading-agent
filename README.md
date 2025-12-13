@@ -1,6 +1,6 @@
 # 📄 Paper Reading Agent
 
-AI-powered paper summarization and Q&A system using GPT-4o-mini, RAG (Retrieval-Augmented Generation), and Pinecone vector database.
+AI-powered paper summarization and Q&A system using GPT-5-mini, RAG (Retrieval-Augmented Generation), and Pinecone vector database.
 
 ## ✨ Features
 
@@ -17,7 +17,7 @@ AI-powered paper summarization and Q&A system using GPT-4o-mini, RAG (Retrieval-
 
 ### User Experience
 
-- 🤖 **Model Selection**: Choose from GPT-4o-mini (default) or GPT-5-mini
+- 🤖 **Model Selection**: Choose from GPT-5-mini (default) or GPT-5-mini
 - 👍👎 **Feedback System**: Rate summaries to evaluate quality
 - 📜 **Session History**: View all previously uploaded papers and their summaries
 - 🎨 **Modern UI**: Beautiful interface with Tailwind CSS and shadcn/ui components
@@ -28,7 +28,7 @@ AI-powered paper summarization and Q&A system using GPT-4o-mini, RAG (Retrieval-
 ### Backend
 
 - **FastAPI**: High-performance Python web framework with async support
-- **OpenAI API**: GPT-4o-mini/GPT-5-mini for summarization, Q&A, and metadata extraction
+- **OpenAI API**: GPT-5-mini/GPT-5-mini for summarization, Q&A, and metadata extraction
 - **LangChain**: Advanced text splitting and embedding management
 - **Pinecone**: Cloud-native vector database for semantic search and RAG
 - **PyPDF2**: Robust PDF text extraction
@@ -181,7 +181,7 @@ export OPENAI_API_KEY=your_openai_api_key_here
 export PINECONE_API_KEY=your_pinecone_api_key_here
 export PINECONE_ENVIRONMENT=your_pinecone_environment_here
 export PINECONE_INDEX_NAME=paper-reading-agent
-export DEFAULT_MODEL=gpt-4o-mini
+export DEFAULT_MODEL=gpt-5-mini
 ```
 
 5. Run the backend server:
@@ -222,7 +222,7 @@ The frontend will be available at `http://localhost:3000`
 
 1. **Configure Settings** (Main Page)
 
-   - Select AI model: GPT-4o-mini (default) or GPT-5-mini
+   - Select AI model: GPT-5-mini (default) or GPT-5-mini
    - Choose language: English or Korean (한국어)
 
 2. **Upload PDF**

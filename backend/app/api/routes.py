@@ -11,7 +11,10 @@ from app.models.schemas import (
     RateRequest,
     RateResponse,
     ModelInfo,
-    SessionDetailResponse
+    SessionDetailResponse,
+    EvaluateRequest,
+    EvaluateResponse,
+    EvaluationScores
 )
 from app.services.pdf_parser import PDFParser
 from app.services.session_manager import session_manager
@@ -76,34 +79,50 @@ async def upload_pdf(file: UploadFile = File(...)):
 async def summarize_paper(request: SummarizeRequest):
     """
     Summarize the paper from a session
+    Automatically evaluates the summary and logs to Langfuse
     """
     # Check if session exists
     session = session_manager.get_session(request.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     try:
         # Get the paper text
         paper_text = session.text
-        
+
         # Generate summary
         summary = await llm_service.summarize_paper(
             paper_text=paper_text,
             custom_prompt=request.custom_prompt,
             model=request.model
         )
-        
+
         # Update session with summary
         session_manager.update_summary(request.session_id, summary)
-        
+
         model_used = request.model or llm_service.default_model
-        
+
+        # Automatically evaluate the summary and log to Langfuse
+        try:
+            evaluation = await llm_service.evaluate_summary(
+                original_text=paper_text,
+                summary=summary,
+                model=model_used,
+                session_id=request.session_id
+            )
+            print(f"✅ Summary evaluated - Overall Score: {evaluation['overall_score']}/10")
+            print(f"   Scores: F={evaluation['faithfulness']}, C={evaluation['completeness']}, "
+                  f"Co={evaluation['conciseness']}, Ch={evaluation['coherence']}, Cl={evaluation['clarity']}")
+        except Exception as eval_error:
+            # Don't fail the summarization if evaluation fails
+            print(f"⚠️  Summary evaluation failed (non-critical): {eval_error}")
+
         return SummarizeResponse(
             session_id=request.session_id,
             summary=summary,
             model=model_used
         )
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -347,17 +366,17 @@ async def get_session_pdf(session_id: str):
     pdf_path = session_manager.get_pdf_path(session_id)
     if not pdf_path:
         raise HTTPException(status_code=404, detail="PDF not found")
-    
+
     session = session_manager.get_session(session_id)
     filename = session.filename if session else "paper.pdf"
-    
+
     from starlette.responses import Response
     import os
-    
+
     # Read the PDF file
     with open(pdf_path, "rb") as f:
         pdf_content = f.read()
-    
+
     # Return PDF with inline disposition
     return Response(
         content=pdf_content,
@@ -366,3 +385,45 @@ async def get_session_pdf(session_id: str):
             "Content-Disposition": f'inline; filename="{filename}"'
         }
     )
+
+
+@router.post("/evaluate", response_model=EvaluateResponse)
+async def evaluate_summary(request: EvaluateRequest):
+    """
+    Evaluate summary quality using LLM-as-a-judge approach
+    All evaluations are automatically logged to Langfuse with session tracking
+    """
+    # Check if session exists
+    session = session_manager.get_session(request.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Check if summary exists
+    if not session.summary:
+        raise HTTPException(
+            status_code=400,
+            detail="No summary found for this session. Please generate a summary first."
+        )
+
+    try:
+        # Evaluate the summary with Langfuse tracing
+        evaluation = await llm_service.evaluate_summary(
+            original_text=session.text,
+            summary=session.summary,
+            model=request.model,
+            session_id=request.session_id  # This enables Langfuse session tracking
+        )
+
+        model_used = request.model or llm_service.default_model
+
+        # Create response with evaluation scores
+        evaluation_scores = EvaluationScores(**evaluation)
+
+        return EvaluateResponse(
+            session_id=request.session_id,
+            evaluation=evaluation_scores,
+            model=model_used
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

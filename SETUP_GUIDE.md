@@ -72,7 +72,7 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 PINECONE_API_KEY=your-pinecone-api-key-here
 PINECONE_ENVIRONMENT=us-west1-gcp
 PINECONE_INDEX_NAME=paper-reading-agent
-DEFAULT_MODEL=gpt-4o-mini
+DEFAULT_MODEL=gpt-5-mini
 ```
 
 7. Start the backend server:
@@ -120,7 +120,7 @@ You should see output like:
 
 ## Step 5: Test the Application
 
-1. **Select a Model**: The default GPT-4o-mini should be pre-selected.
+1. **Select a Model**: The default GPT-5-mini should be pre-selected.
 
 2. **Upload a PDF**:
 

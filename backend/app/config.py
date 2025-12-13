@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     pinecone_api_key: str
     pinecone_environment: str
     pinecone_index_name: str = "paper-reading-agent"
-    default_model: str = "gpt-4o-mini"
-    
+    default_model: str = "gpt-5-mini"
+
     # Langfuse (optional)
     langfuse_secret_key: Optional[str] = None
     langfuse_public_key: Optional[str] = None
