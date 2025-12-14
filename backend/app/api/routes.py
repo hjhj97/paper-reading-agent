@@ -87,10 +87,22 @@ async def summarize_paper(request: SummarizeRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     try:
+        model_used = request.model or llm_service.default_model
+        
+        # If summary already exists and no custom prompt, return cached summary
+        if session.summary and not request.custom_prompt:
+            print(f"✅ Returning cached summary for session {request.session_id}")
+            return SummarizeResponse(
+                session_id=request.session_id,
+                summary=session.summary,
+                model=model_used
+            )
+        
         # Get the paper text
         paper_text = session.text
 
         # Generate summary
+        print(f"🔄 Generating new summary for session {request.session_id}")
         summary = await llm_service.summarize_paper(
             paper_text=paper_text,
             custom_prompt=request.custom_prompt,
@@ -99,8 +111,6 @@ async def summarize_paper(request: SummarizeRequest):
 
         # Update session with summary
         session_manager.update_summary(request.session_id, summary)
-
-        model_used = request.model or llm_service.default_model
 
         # Automatically evaluate the summary and log to Langfuse
         try:
@@ -138,10 +148,22 @@ async def analyze_storyline(request: StorylineRequest):
         raise HTTPException(status_code=404, detail="Session not found")
     
     try:
+        model_used = request.model or llm_service.default_model
+        
+        # If storyline already exists, return cached version
+        if session.storyline:
+            print(f"✅ Returning cached storyline for session {request.session_id}")
+            return StorylineResponse(
+                session_id=request.session_id,
+                storyline=session.storyline,
+                model=model_used
+            )
+        
         # Get the paper text
         paper_text = session.text
         
         # Generate storyline analysis
+        print(f"🔄 Generating new storyline for session {request.session_id}")
         storyline = await llm_service.analyze_storyline(
             paper_text=paper_text,
             model=request.model,
@@ -150,8 +172,6 @@ async def analyze_storyline(request: StorylineRequest):
         
         # Update session with storyline
         session_manager.update_storyline(request.session_id, storyline)
-        
-        model_used = request.model or llm_service.default_model
         
         return StorylineResponse(
             session_id=request.session_id,

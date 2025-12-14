@@ -256,7 +256,7 @@ export default function PaperPage() {
           sessionId={sessionId}
           selectedModel={selectedModel}
           selectedLanguage={selectedLanguage}
-          autoAnalyze={true}
+          autoAnalyze={!session.storyline}
           initialStoryline={session.storyline}
         />
 
@@ -266,7 +266,7 @@ export default function PaperPage() {
           selectedModel={selectedModel}
           selectedLanguage={selectedLanguage}
           onSummaryGenerated={handleSummaryGenerated}
-          autoSummarize={true}
+          autoSummarize={!session.summary}
           initialSummary={session.summary}
         />
 

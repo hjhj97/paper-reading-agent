@@ -35,13 +35,16 @@ export default function StorylineDisplay({
   const [storyline, setStoryline] = useState<string>(initialStoryline || "");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string>("");
+  const [hasAutoAnalyzed, setHasAutoAnalyzed] = useState(false);
 
   // Auto-analyze on mount if enabled and no existing storyline
   useEffect(() => {
-    if (autoAnalyze && !initialStoryline && !storyline && !isAnalyzing) {
+    // Only auto-analyze once when component mounts
+    if (autoAnalyze && !initialStoryline && !storyline && !isAnalyzing && !hasAutoAnalyzed) {
+      setHasAutoAnalyzed(true);
       handleAnalyzeStoryline();
     }
-  }, [autoAnalyze, initialStoryline]);
+  }, [autoAnalyze, initialStoryline, storyline, isAnalyzing, hasAutoAnalyzed]);
 
   // Update storyline if initialStoryline changes
   useEffect(() => {
