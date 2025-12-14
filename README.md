@@ -226,6 +226,8 @@ npm run dev  # http://localhost:3000
 
 ## 향후 계획
 
+[노션](https://hajuheon.notion.site/Paper-Reading-Agent-2c18413d38d5809592b6f1f1afa51df3?source=copy_link)에서 현재 진행 중인 개발 진행 상황 확인 가능
+
 - [ ] 세션 기반 -> 데이터베이스 통합
 - [ ] 사용자 인증 (소셜로그인)
 - [ ] 연/추천관 논문 검색
