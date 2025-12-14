@@ -29,8 +29,8 @@ export default function PaperPage() {
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>(
     typeof window !== "undefined"
-      ? localStorage.getItem("preferredModel") || "gpt-4o-mini"
-      : "gpt-4o-mini"
+      ? localStorage.getItem("preferredModel") || "gpt-5-mini"
+      : "gpt-5-mini"
   );
   const [selectedLanguage, setSelectedLanguage] = useState<string>(
     typeof window !== "undefined"

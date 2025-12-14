@@ -32,10 +32,7 @@ export default function ModelSelector({
       } catch (err) {
         console.error("Failed to fetch models:", err);
         // Set default models as fallback
-        setModels([
-          { id: "gpt-4o-mini", name: "GPT-4o Mini", is_default: true },
-          { id: "gpt-5-mini", name: "GPT-5 Mini", is_default: false },
-        ]);
+        setModels([{ id: "gpt-5-mini", name: "GPT-5 Mini", is_default: true }]);
       } finally {
         setIsLoading(false);
       }

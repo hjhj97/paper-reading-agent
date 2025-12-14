@@ -17,7 +17,7 @@ import { FileText, Sparkles, MessageCircle, History } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
-  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
+  const [selectedModel, setSelectedModel] = useState<string>("gpt-5-mini");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
   const handleUploadSuccess = (newSessionId: string) => {

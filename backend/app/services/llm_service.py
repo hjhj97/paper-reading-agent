@@ -2,6 +2,8 @@ from openai import OpenAI
 from app.config import settings
 from typing import Optional
 import os
+import json
+import re
 
 # Langfuse integration via OpenAI wrapper (optional)
 LANGFUSE_ENABLED = False
@@ -128,8 +130,7 @@ IMPORTANT: For mathematical formulas, use proper LaTeX syntax:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Paper text:\n\n{paper_text}"}
                 ],
-                temperature=0.7,
-                max_tokens=2000
+                max_completion_tokens=2000
             )
             
             summary = response.choices[0].message.content
@@ -174,8 +175,7 @@ Please provide a clear and concise answer based on the context above."""
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.5,
-                max_tokens=1000
+                max_completion_tokens=1000
             )
             
             answer = response.choices[0].message.content
@@ -227,8 +227,7 @@ Please provide a clear and concise answer based on the context above. Use $$...$
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.5,
-                max_tokens=1000,
+                max_completion_tokens=1000,
                 stream=True
             )
             
@@ -309,8 +308,7 @@ IMPORTANT:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.7,
-                max_tokens=800
+                max_completion_tokens=800
             )
             
             storyline = response.choices[0].message.content
@@ -332,44 +330,52 @@ IMPORTANT:
         Returns:
             Dictionary with title, authors, year
         """
-        system_prompt = """You are a metadata extraction expert. Extract the paper's title, authors, and publication year from the provided text.
+        system_prompt = """Extract title, authors, and year from the paper.
 
-Return your answer in EXACTLY this format:
-TITLE: [paper title]
-AUTHORS: [comma-separated author names]
-YEAR: [publication year]
+Return ONLY this JSON format:
+{"title": "exact title", "authors": "name1, name2", "year": "YYYY"}
 
-If any field is not found, use "Unknown" for that field."""
+Use "Unknown" if not found. No extra text."""
 
         try:
             response = self.client.chat.completions.create(
-                model=self.default_model,  # Use default model for metadata
+                model=self.default_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"Extract metadata from this paper:\n\n{paper_text[:3000]}"}
+                    {"role": "user", "content": f"Extract from:\n\n{paper_text[:5000]}"}
                 ],
-                temperature=0.3,
-                max_tokens=200
+                max_completion_tokens=500
             )
 
-            result = response.choices[0].message.content
+            result = response.choices[0].message.content.strip()
+            
+            if not result:
+                print(f"Warning: Empty response from metadata extraction")
+                return {"title": "Unknown", "authors": "Unknown", "year": "Unknown"}
 
-            # Parse the result
-            metadata = {
-                "title": "Unknown",
-                "authors": "Unknown",
-                "year": "Unknown"
-            }
-
-            for line in result.split('\n'):
-                if line.startswith('TITLE:'):
-                    metadata['title'] = line.replace('TITLE:', '').strip()
-                elif line.startswith('AUTHORS:'):
-                    metadata['authors'] = line.replace('AUTHORS:', '').strip()
-                elif line.startswith('YEAR:'):
-                    metadata['year'] = line.replace('YEAR:', '').strip()
-
-            return metadata
+            # Parse JSON response - try to find any JSON object
+            try:
+                # Try to extract JSON (handles both plain and code-block formats)
+                json_match = re.search(r'\{[^}]*"title"[^}]*"authors"[^}]*"year"[^}]*\}', result, re.DOTALL)
+                if not json_match:
+                    # Fallback: find any JSON object
+                    json_match = re.search(r'\{.*?\}', result, re.DOTALL)
+                
+                if json_match:
+                    metadata = json.loads(json_match.group(0))
+                    return {
+                        "title": metadata.get("title", "Unknown"),
+                        "authors": metadata.get("authors", "Unknown"),
+                        "year": metadata.get("year", "Unknown")
+                    }
+                else:
+                    print(f"Warning: No JSON found in response: {result[:200]}")
+                    return {"title": "Unknown", "authors": "Unknown", "year": "Unknown"}
+                
+            except (json.JSONDecodeError, AttributeError) as e:
+                print(f"Warning: JSON parse error: {e}")
+                print(f"Raw response: {result[:300]}")
+                return {"title": "Unknown", "authors": "Unknown", "year": "Unknown"}
 
         except Exception as e:
             print(f"Warning: Failed to extract metadata: {str(e)}")
@@ -536,8 +542,7 @@ Please evaluate this summary using the criteria above and return a JSON response
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_message}
                     ],
-                    temperature=0.1,  # Very low temperature for strict, consistent evaluations
-                    max_tokens=1500,  # Increased for detailed reasoning
+                    max_completion_tokens=1500,  # Increased for detailed reasoning
                     name=f"evaluate_summary_{session_id}",  # For Langfuse tracking
                     metadata={
                         "session_id": session_id,
@@ -558,8 +563,7 @@ Please evaluate this summary using the criteria above and return a JSON response
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_message}
                     ],
-                    temperature=0.1,  # Very low temperature for strict, consistent evaluations
-                    max_tokens=1500   # Increased for detailed reasoning
+                    max_completion_tokens=1500   # Increased for detailed reasoning
                 )
 
             result_text = response.choices[0].message.content
